@@ -12,7 +12,7 @@ ensure_dir() {
 # We want to treat 1 as "success with 0 results" rather than an error.
 safe_rga() {
     # Run rga and allow exit code 0 (matches) or 1 (no matches)
-    rga "$@" || [ $? -eq 1 ]
+    rga --ignore-file='/var/home/b08x/.gitignore' --hidden --rga-accurate --rga-adapters='poppler,pandoc' -j 4 "$@" || [ $? -eq 1 ]
 }
 
 # --- 1. Chunking ---
@@ -23,7 +23,7 @@ run_chunking_queries() {
 
     # 1.1 Basic Strategy
     safe_rga -i 'chunk.*strateg|semantic.*split|text.*segment' \
-        --type markdown --type pdf --type ruby --type typescript \
+        --type markdown --type pdf --type ruby --type typescript --type json\
         "$src" \
         --json | \
         jq -r 'select(type == "object") | 
@@ -64,8 +64,8 @@ run_embedding_queries() {
     local out="$2/embedding"
     ensure_dir "$out"
 
-    safe_rga 'sentence-transformers|model.*embed' \
-        --type json --type yaml --type markdown \
+    safe_rga 'informers|sentence-transformers|model.*embed' \
+        --type json --type yaml --type markdown --type ruby \
         "$src" \
         --json | \
         jq -r 'select(.type == "match") |
@@ -104,7 +104,7 @@ run_preprocessing_queries() {
     ensure_dir "$out"
 
     safe_rga 'def (clean|normalize|preprocess|sanitize)' \
-        --type ruby --type py --type markdown \
+        --type ruby --type py --type markdown --type pdf \
         --context 8 \
         --max-count 100 \
         "$src" > "$out/methods_raw.txt"

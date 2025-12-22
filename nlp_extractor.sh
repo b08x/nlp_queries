@@ -40,7 +40,9 @@ check_dependencies() {
 execute_extraction() {
     local title="$1"
     local func_name="$2"
-    local log_err="${SESSION_OUTPUT}/${func_name}_errors.log"
+    local source_dir="$3"
+    local output_dir="$4"
+    local log_err="${output_dir}/${func_name}_errors.log"
     
     export LIB_DIR
     
@@ -51,7 +53,7 @@ execute_extraction() {
             set -e
             source "$LIB_DIR/queries.sh"
             "$1" "$2" "$3" 2>"$4"
-        ' -- "$func_name" "$SOURCE_DIR" "$SESSION_OUTPUT" "$log_err"; then
+        ' -- "$func_name" "$source_dir" "$output_dir" "$log_err"; then
         
         # Check if the log has actual errors (not just empty matches)
         if [ -s "$log_err" ]; then
@@ -72,9 +74,24 @@ gum_style --border double --margin "1 2" --padding "1 2" --border-foreground 212
     "NLP Strategy Extraction" "  Pattern Discovery & Agent Tagging"
 
 gum_title "Configuration"
-DEFAULT_SOURCE="$HOME/Notebook"
-SOURCE_DIR=$(gum_input --value "$DEFAULT_SOURCE" --placeholder "Source dir...")
-[ ! -d "$SOURCE_DIR" ] && { gum_fail "Not a directory: $SOURCE_DIR"; exit 1; }
+
+INPUT_PATHS=()
+if [ $# -gt 0 ]; then
+    for arg in "$@"; do
+        if [ -d "$arg" ]; then
+            INPUT_PATHS+=("$(realpath "$arg")")
+        else
+            gum_warn "Not a directory, skipping: $arg"
+        fi
+    done
+fi
+
+if [ ${#INPUT_PATHS[@]} -eq 0 ]; then
+    DEFAULT_SOURCE="$HOME/Notebook"
+    SOURCE_DIR=$(gum_input --value "$DEFAULT_SOURCE" --placeholder "Source dir...")
+    [ ! -d "$SOURCE_DIR" ] && { gum_fail "Not a directory: $SOURCE_DIR"; exit 1; }
+    INPUT_PATHS+=("$(realpath "$SOURCE_DIR")")
+fi
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 SESSION_OUTPUT="${OUTPUT_BASE}/run_${TIMESTAMP}"
@@ -90,21 +107,33 @@ SELECTED=$(printf "%s\n" "${OPTIONS[@]}" | gum choose --no-limit --height 15)
 [ -z "$SELECTED" ] && { gum_warn "Nothing selected."; exit 0; }
 
 gum_title "Processing"
-while read -r category; do
-    [ -z "$category" ] && continue
-    case "$category" in
-        *"1. Chunking"*) execute_extraction "Chunking" "run_chunking_queries" || true ;;
-        *"2. Embedding"*) execute_extraction "Embedding" "run_embedding_queries" || true ;;
-        *"3. Preprocessing"*) execute_extraction "Preprocessing" "run_preprocessing_queries" || true ;;
-        *"4. Parsers"*) execute_extraction "Parsers" "run_parser_queries" || true ;;
-        *"5. Pipelines"*) execute_extraction "Pipelines" "run_pipeline_queries" || true ;;
-        *"6. Models"*) execute_extraction "Models" "run_model_queries" || true ;;
-        *"7. Search"*) execute_extraction "Search" "run_search_queries" || true ;;
-        *"8. Configs"*) execute_extraction "Configs" "run_config_queries" || true ;;
-        *"9. Graphs"*) execute_extraction "Graphs" "run_graph_queries" || true ;;
-        *"10. Multi-Modal"*) execute_extraction "Multi-Modal" "run_multimodal_queries" || true ;;
-    esac
-done <<< "$SELECTED"
+for SOURCE_DIR in "${INPUT_PATHS[@]}"; do
+    FOLDER_NAME=$(basename "$SOURCE_DIR")
+    # Handling root or '.' gracefully
+    [ "$FOLDER_NAME" == "." ] || [ -z "$FOLDER_NAME" ] && FOLDER_NAME="root"
+    
+    CURRENT_SESSION_OUTPUT="${SESSION_OUTPUT}/${FOLDER_NAME}"
+    mkdir -p "$CURRENT_SESSION_OUTPUT"
+    
+    gum_info "Processing Source: $SOURCE_DIR"
+    gum_info "Results: $CURRENT_SESSION_OUTPUT"
+
+    while read -r category; do
+        [ -z "$category" ] && continue
+        case "$category" in
+            *"1. Chunking"*) execute_extraction "Chunking" "run_chunking_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"2. Embedding"*) execute_extraction "Embedding" "run_embedding_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"3. Preprocessing"*) execute_extraction "Preprocessing" "run_preprocessing_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"4. Parsers"*) execute_extraction "Parsers" "run_parser_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"5. Pipelines"*) execute_extraction "Pipelines" "run_pipeline_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"6. Models"*) execute_extraction "Models" "run_model_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"7. Search"*) execute_extraction "Search" "run_search_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"8. Configs"*) execute_extraction "Configs" "run_config_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"9. Graphs"*) execute_extraction "Graphs" "run_graph_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+            *"10. Multi-Modal"*) execute_extraction "Multi-Modal" "run_multimodal_queries" "$SOURCE_DIR" "$CURRENT_SESSION_OUTPUT" || true ;;
+        esac
+    done <<< "$SELECTED"
+done
 
 gum_title "Finished"
 FILE_COUNT=$(find "$SESSION_OUTPUT" -type f \( -name "*.jsonl" -o -name "*.txt" \) | wc -l)
