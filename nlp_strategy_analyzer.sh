@@ -58,7 +58,7 @@ discover_extraction_runs() {
     # Select most recent run (lexicographically sorted by timestamp)
     SELECTED_RUN=$(printf '%s\n' "${runs[@]}" | sort -r | head -1)
     
-    echo ""
+    echo "" >&2
     log_success "Selected: $(basename "$SELECTED_RUN")"
     
     # Display source directories within selected run
@@ -69,7 +69,8 @@ discover_extraction_runs() {
         log_info "  • $src_dir ($category_count categories)"
     done
     
-    echo "$SELECTED_RUN"
+    # Return clean path (trim any whitespace)
+    echo "$SELECTED_RUN" | tr -d '\n\r' | xargs
 }
 
 # --- Stage 2: Inventory Analysis ---
@@ -78,6 +79,21 @@ analyze_inventory() {
     local inventory_file="$2"
     
     log_stage "Stage 2: Content Inventory Analysis"
+    
+    # Validation: Check if run directory exists and has content
+    if [ ! -d "$run_dir" ]; then
+        log_info "ERROR: Run directory does not exist: $run_dir"
+        return 1
+    fi
+    
+    local src_count=$(find "$run_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+    log_info "Found $src_count source directories in: $(basename "$run_dir")"
+    
+    if [ "$src_count" -eq 0 ]; then
+        log_info "WARNING: No source directories found in run directory"
+        log_info "Run directory contents:"
+        ls -la "$run_dir" >&2
+    fi
     
     {
         echo "# Extraction Inventory"
@@ -89,14 +105,21 @@ analyze_inventory() {
         echo "## Source Directory Analysis"
         echo ""
         
-        find "$run_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | while read -r src_dir; do
+        # More robust directory iteration
+        local found_sources=false
+        while IFS= read -r src_dir; do
+            [ ! -d "$src_dir" ] && continue
+            found_sources=true
+            
             local src_name=$(basename "$src_dir")
             echo "### $src_name"
             echo ""
             
+            local has_categories=false
             for category in chunking embedding preprocessing parsers pipelines models search config graphs multimodal; do
                 local cat_path="${src_dir}/${category}"
                 if [ -d "$cat_path" ]; then
+                    has_categories=true
                     local file_count=$(find "$cat_path" -type f 2>/dev/null | wc -l)
                     local jsonl_count=$(find "$cat_path" -type f -name "*.jsonl" 2>/dev/null | wc -l)
                     local raw_count=$(find "$cat_path" -type f -name "*_raw.txt" 2>/dev/null | wc -l)
@@ -108,8 +131,24 @@ analyze_inventory() {
                     fi
                 fi
             done
+            
+            if [ "$has_categories" = false ]; then
+                echo "*No category directories found*"
+                echo ""
+                echo "Directory structure:"
+                find "$src_dir" -maxdepth 2 -type d -exec basename {} \; | sed 's/^/  - /'
+            fi
+            
             echo ""
-        done
+        done < <(find "$run_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
+        
+        if [ "$found_sources" = false ]; then
+            echo "*No source directories found in extraction run*"
+            echo ""
+            echo "Run directory structure:"
+            find "$run_dir" -maxdepth 2 | sed 's/^/  /'
+            echo ""
+        fi
         
         # Overall summary
         echo "## Overall Summary"
@@ -124,6 +163,14 @@ analyze_inventory() {
         echo "- Structured Data (JSONL): $total_jsonl"
         echo "- Raw Text Extracts: $total_raw"
         echo "- Total Size: ${total_size:-unknown}"
+        
+        if [ "$total_files" -eq 0 ]; then
+            echo ""
+            echo "**WARNING**: No extraction files found. This could indicate:"
+            echo "- Extraction queries returned no matches"
+            echo "- Incorrect directory structure"
+            echo "- Extraction process failed silently"
+        fi
         echo ""
         
     } | tee "$inventory_file"
@@ -357,6 +404,24 @@ main() {
     
     # Execute pipeline stages
     RUN_DIR=$(discover_extraction_runs)
+    
+    # Validate and sanitize returned path
+    RUN_DIR=$(echo "$RUN_DIR" | xargs)  # Trim whitespace
+    
+    if [ -z "$RUN_DIR" ]; then
+        echo "ERROR: Discovery function returned empty path" >&2
+        exit 1
+    fi
+    
+    if [ ! -d "$RUN_DIR" ]; then
+        echo "ERROR: Discovered path is not a directory: '$RUN_DIR'" >&2
+        echo "Path length: ${#RUN_DIR} characters" >&2
+        echo "Path hex dump:" >&2
+        echo "$RUN_DIR" | od -c >&2
+        exit 1
+    fi
+    
+    log_info "Validated run directory: $RUN_DIR"
     
     analyze_inventory "$RUN_DIR" "${ANALYSIS_RUN}/inventory.md"
     
