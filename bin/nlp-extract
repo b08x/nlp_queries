@@ -130,7 +130,7 @@ main() {
     "1. Chunking"      "2. Embedding"      "3. Preprocessing"
     "4. Parsers"       "5. Pipelines"      "6. Models"
     "7. Search"        "8. Configs"        "9. Graphs"
-    "10. Multi-Modal"
+    "10. Multi-Modal"  "11. Databases"
   )
   local selected
   selected="$(printf "%s\n" "${options[@]}" | Gum::_run choose --no-limit --height 15)"
@@ -162,6 +162,7 @@ main() {
         *"8. Configs"*)       _run_category "Configs"       "Query::run_configs"       "${src_dir}" "${src_output}" || true ;;
         *"9. Graphs"*)        _run_category "Graphs"        "Query::run_graphs"        "${src_dir}" "${src_output}" || true ;;
         *"10. Multi-Modal"*)  _run_category "Multi-Modal"   "Query::run_multimodal"    "${src_dir}" "${src_output}" || true ;;
+        *"11. Databases"*)    _run_category "Databases"     "Query::run_databases"     "${src_dir}" "${src_output}" || true ;;
       esac
     done <<< "${selected}"
   done
@@ -169,7 +170,7 @@ main() {
   # Summary
   Gum::title "Finished"
   local file_count
-  file_count="$(find "${session_output}" -type f \( -name "*.jsonl" -o -name "*.txt" \) | wc -l)"
+  file_count="$(find "${session_output}" -type f \( -name "*.jsonl" -o -name "*.md" \) | wc -l)"
   Gum::style \
     --border rounded --border-foreground "${COLOR_GREEN}" --padding "1 2" \
     "Summary" \
