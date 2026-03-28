@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# bin/nlp-extract — Interactive NLP strategy extraction
+#
+# Usage:
+#   bin/nlp-extract                    # prompts for source directory
+#   bin/nlp-extract ~/repo1 ~/repo2    # multi-source batch extraction
+
+set -euo pipefail
+IFS=$'\n\t'
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly LIB_DIR="${SCRIPT_DIR}/../lib"
+readonly OUTPUT_BASE="${NLPQ_OUTPUT_BASE:-${SCRIPT_DIR}/../output}"
+
+# ── Source libraries ──────────────────────────────────────────────────────────
+
+for _lib in config log gum queries; do
+  if [[ ! -f "${LIB_DIR}/${_lib}.sh" ]]; then
+    echo "Error: ${LIB_DIR}/${_lib}.sh not found" >&2
+    exit 1
+  fi
+  # shellcheck source=/dev/null
+  source "${LIB_DIR}/${_lib}.sh"
+done
+unset _lib
+
+# ── Startup ───────────────────────────────────────────────────────────────────
+
+Log::setup "${SCRIPT_DIR}/../logs"
+Gum::init
+Gum::install_traps
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+_check_dependencies() {
+  local missing=()
+  command -v rga &>/dev/null || missing+=("ripgrep-all (rga)")
+  command -v jq  &>/dev/null || missing+=("jq")
+
+  if [[ ${#missing[@]} -ne 0 ]]; then
+    Gum::style --foreground 196 "Error: Missing required dependencies:"
+    for dep in "${missing[@]}"; do
+      Gum::style --foreground 252 "  - ${dep}"
+    done
+    exit 1
+  fi
+}
+
+# _run_category <title> <Query::func> <source_dir> <output_dir>
+# Runs the query function in a subshell under a gum spinner.
+_run_category() {
+  local title="$1"
+  local func="$2"
+  local source_dir="$3"
+  local output_dir="$4"
+  # Sanitize :: for use as a filename component
+  local log_err="${output_dir}/${func//::/_}_errors.log"
+
+  export LIB_DIR
+
+  if ! Gum::spin --title "${title}" -- \
+    bash -c '
+      set -euo pipefail
+      # shellcheck source=/dev/null
+      source "${LIB_DIR}/queries.sh"
+      "$1" "$2" "$3" 2>"$4"
+    ' -- "${func}" "${source_dir}" "${output_dir}" "${log_err}"; then
+
+    if [[ -s "${log_err}" ]]; then
+      Gum::fail "Error in: ${title}"
+      Gum::style --foreground 203 "$(< "${log_err}")"
+      return 1
+    fi
+  fi
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+main() {
+  _check_dependencies
+  clear
+
+  Gum::style \
+    --border double --margin "1 2" --padding "1 2" \
+    --border-foreground "${COLOR_PURPLE}" \
+    "NLP Strategy Extraction" \
+    "  Pattern Discovery & Agent Tagging"
+
+  Gum::title "Configuration"
+
+  # Collect and validate source directories from args or prompt
+  local -a input_paths=()
+  if [[ $# -gt 0 ]]; then
+    for arg in "$@"; do
+      if [[ -d "${arg}" ]]; then
+        input_paths+=("$(realpath "${arg}")")
+      else
+        Gum::warn "Not a directory, skipping: ${arg}"
+      fi
+    done
+  fi
+
+  if [[ ${#input_paths[@]} -eq 0 ]]; then
+    local chosen_src
+    chosen_src="$(Gum::input --value "${HOME}/Notebook" --placeholder "Source directory...")"
+    [[ ! -d "${chosen_src}" ]] && { Gum::fail "Not a directory: ${chosen_src}"; exit 1; }
+    input_paths+=("$(realpath "${chosen_src}")")
+  fi
+
+  # Set up output directory for this session
+  local timestamp session_output
+  timestamp="$(date +%Y%m%d_%H%M%S)"
+  session_output="${OUTPUT_BASE}/run_${timestamp}"
+  mkdir -p "${session_output}"
+
+  Gum::info "Results: ${session_output}"
+  sleep 0.2
+  Gum::confirm "Start Extraction?" || { Gum::warn "Aborted."; exit 0; }
+
+  # Strategy selection
+  Gum::title "Select Strategies"
+  local -a options=(
+    "1. Chunking"      "2. Embedding"      "3. Preprocessing"
+    "4. Parsers"       "5. Pipelines"      "6. Models"
+    "7. Search"        "8. Configs"        "9. Graphs"
+    "10. Multi-Modal"
+  )
+  local selected
+  selected="$(printf "%s\n" "${options[@]}" | Gum::_run choose --no-limit --height 15)"
+  [[ -z "${selected}" ]] && { Gum::warn "Nothing selected."; exit 0; }
+
+  # Run selected categories over each source directory
+  Gum::title "Processing"
+  for src_dir in "${input_paths[@]}"; do
+    local folder_name
+    folder_name="$(basename "${src_dir}")"
+    [[ "${folder_name}" == "." || -z "${folder_name}" ]] && folder_name="root"
+
+    local src_output="${session_output}/${folder_name}"
+    mkdir -p "${src_output}"
+
+    Gum::info "Processing: ${src_dir}"
+    Gum::info "Output:     ${src_output}"
+
+    while IFS= read -r category; do
+      [[ -z "${category}" ]] && continue
+      case "${category}" in
+        *"1. Chunking"*)      _run_category "Chunking"      "Query::run_chunking"      "${src_dir}" "${src_output}" || true ;;
+        *"2. Embedding"*)     _run_category "Embedding"     "Query::run_embedding"     "${src_dir}" "${src_output}" || true ;;
+        *"3. Preprocessing"*) _run_category "Preprocessing" "Query::run_preprocessing" "${src_dir}" "${src_output}" || true ;;
+        *"4. Parsers"*)       _run_category "Parsers"       "Query::run_parsers"       "${src_dir}" "${src_output}" || true ;;
+        *"5. Pipelines"*)     _run_category "Pipelines"     "Query::run_pipelines"     "${src_dir}" "${src_output}" || true ;;
+        *"6. Models"*)        _run_category "Models"        "Query::run_models"        "${src_dir}" "${src_output}" || true ;;
+        *"7. Search"*)        _run_category "Search"        "Query::run_search"        "${src_dir}" "${src_output}" || true ;;
+        *"8. Configs"*)       _run_category "Configs"       "Query::run_configs"       "${src_dir}" "${src_output}" || true ;;
+        *"9. Graphs"*)        _run_category "Graphs"        "Query::run_graphs"        "${src_dir}" "${src_output}" || true ;;
+        *"10. Multi-Modal"*)  _run_category "Multi-Modal"   "Query::run_multimodal"    "${src_dir}" "${src_output}" || true ;;
+      esac
+    done <<< "${selected}"
+  done
+
+  # Summary
+  Gum::title "Finished"
+  local file_count
+  file_count="$(find "${session_output}" -type f \( -name "*.jsonl" -o -name "*.txt" \) | wc -l)"
+  Gum::style \
+    --border rounded --border-foreground "${COLOR_GREEN}" --padding "1 2" \
+    "Summary" \
+    "Files:    ${file_count}" \
+    "Location: ${session_output}"
+
+  if [[ "$(Gum::choose "Explore" "Exit")" == "Explore" ]]; then
+    ls -R "${session_output}" | Gum::pager
+  fi
+}
+
+main "$@"

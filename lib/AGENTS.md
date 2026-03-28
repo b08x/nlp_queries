@@ -16,6 +16,7 @@ Shared libraries sourced by main scripts: extraction query engine + UI framework
 ## EXTRACTION FUNCTIONS (queries.sh)
 
 **10 Category Functions:**
+
 - `run_chunking_queries` - Semantic split, token windows, hierarchical patterns
 - `run_embedding_queries` - Models, dimensions, vector DBs
 - `run_preprocessing_queries` - Clean/normalize functions, tokenizers
@@ -28,6 +29,7 @@ Shared libraries sourced by main scripts: extraction query engine + UI framework
 - `run_multimodal_queries` - Vision models
 
 **Function Signature:**
+
 ```bash
 run_<category>_queries() {
     local src="$1"          # Source directory to search
@@ -39,17 +41,20 @@ run_<category>_queries() {
 ```
 
 **Output Conventions:**
+
 - JSONL files: `<name>.jsonl` - machine-readable, processed with jq
 - Raw text: `<name>_raw.txt` - human-readable, includes context lines
 
 ## UI FRAMEWORK (gum_wrapper.sh)
 
 **Trap Functions:**
+
 - `trap_error()` - Captures failures → writes to `$ERROR_MSG` file
 - `trap_exit()` - Reads error file → displays message → cleanup
 - `trap_gum_exit()` - Ctrl+C handler (exit 130)
 
 **Color Scheme:**
+
 ```bash
 COLOR_PURPLE=212  # Titles, prompts, interactive elements
 COLOR_GREEN=36    # Success, summaries, property values
@@ -59,6 +64,7 @@ COLOR_WHITE=251   # Standard text
 ```
 
 **Wrapper Functions:**
+
 ```bash
 gum_title()    # Bold purple "+" prefix
 gum_info()     # Green "•" prefix
@@ -73,6 +79,7 @@ gum_filter()   # Purple header
 ## CONVENTIONS
 
 **Adding New Extraction Function:**
+
 1. Define `run_<name>_queries()` in queries.sh
 2. Accept `$1` (source dir), `$2` (output base)
 3. Call `ensure_dir "$out/<category>"`
@@ -81,6 +88,7 @@ gum_filter()   # Purple header
 6. Register in `nlp_extractor.sh` OPTIONS array + case statement
 
 **Regex Pattern Design:**
+
 - Case-insensitive: `-i` flag
 - Flexible spacing: `.*` between terms
 - Alternatives: `(term1|term2|term3)`
@@ -88,6 +96,7 @@ gum_filter()   # Purple header
 - Limit: `--max-count 75` to prevent overwhelming output
 
 **Safe rga Usage:**
+
 ```bash
 safe_rga 'pattern' \
     --type py --type ruby \

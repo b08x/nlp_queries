@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# bin/nlp-diag — Diagnostic utility for extraction run structure analysis
+#
+# Usage:
+#   bin/nlp-diag
+
+set -euo pipefail
+IFS=$'\n\t'
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly OUTPUT_DIR="${NLPQ_OUTPUT_BASE:-${SCRIPT_DIR}/../output}"
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+_diag_run() {
+  local run_dir="$1"
+  local run_name src_count
+  run_name="$(basename "${run_dir}")"
+  src_count="$(find "${run_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
+
+  printf '━━━ %s ━━━\n' "${run_name}"
+  printf '  Source Directories: %d\n' "${src_count}"
+
+  if [[ "${src_count}" -eq 0 ]]; then
+    printf '  ⚠ No source directories found\n\n'
+    printf '  Directory contents:\n'
+    ls -lah "${run_dir}" | sed 's/^/    /'
+    printf '\n'
+    return
+  fi
+
+  while IFS= read -r src_dir; do
+    local src_name cat_count file_count
+    src_name="$(basename "${src_dir}")"
+    cat_count="$(find "${src_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
+    file_count="$(find "${src_dir}" -type f \
+                    \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
+
+    printf '  → %s\n' "${src_name}"
+    printf '     Categories: %d | Files: %d\n' "${cat_count}" "${file_count}"
+
+    if [[ "${file_count}" -gt 0 ]]; then
+      for category in chunking embedding preprocessing parsers pipelines models search config graphs multimodal; do
+        local cat_path="${src_dir}/${category}"
+        if [[ -d "${cat_path}" ]]; then
+          local cat_files
+          cat_files="$(find "${cat_path}" -type f 2>/dev/null | wc -l)"
+          if [[ "${cat_files}" -gt 0 ]]; then
+            printf '       • %s: %d files\n' "${category}" "${cat_files}"
+          fi
+        fi
+      done
+    else
+      printf '       ⚠ No extraction files found\n'
+      printf '       Directory structure:\n'
+      find "${src_dir}" -maxdepth 2 -type d -exec basename {} \; | sed 's/^/         - /'
+    fi
+    printf '\n'
+
+  done < <(find "${run_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
+
+  local total_files total_size
+  total_files="$(find "${run_dir}" -type f \
+                   \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
+  total_size="$(du -sh "${run_dir}" 2>/dev/null | awk '{print $1}')"
+  printf '  Summary: %d files | %s total\n\n' "${total_files}" "${total_size}"
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+main() {
+  printf '═══════════════════════════════════════\n'
+  printf '  Extraction Run Structure Diagnostics\n'
+  printf '═══════════════════════════════════════\n\n'
+
+  if [[ ! -d "${OUTPUT_DIR}" ]]; then
+    printf 'ERROR: Output directory not found: %s\n' "${OUTPUT_DIR}" >&2
+    exit 1
+  fi
+
+  printf 'Output Directory: %s\n\n' "${OUTPUT_DIR}"
+  printf '▸ Discovering Extraction Runs...\n'
+
+  local -a runs=()
+  while IFS= read -r -d '' run_dir; do
+    runs+=("${run_dir}")
+  done < <(find "${OUTPUT_DIR}" -maxdepth 1 -type d -name "run_*" -print0 | sort -rz)
+
+  if [[ ${#runs[@]} -eq 0 ]]; then
+    printf '  No extraction runs found\n'
+    exit 0
+  fi
+
+  printf '  Found: %d run(s)\n\n' "${#runs[@]}"
+
+  for run_dir in "${runs[@]}"; do
+    _diag_run "${run_dir}"
+  done
+
+  printf '═══════════════════════════════════════\n\n'
+  printf 'Recommendations:\n\n'
+
+  local latest_run latest_files
+  latest_run="${runs[0]}"
+  latest_files="$(find "${latest_run}" -type f \
+                    \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
+
+  if [[ "${latest_files}" -eq 0 ]]; then
+    printf '  ⚠ Latest run contains no extraction files\n'
+    printf '    - Verify extraction queries are finding matches\n'
+    printf '    - Check extraction logs for errors\n'
+    printf '    - Ensure source directories contain searchable content\n'
+  else
+    printf '  ✓ Latest run appears valid with %d files\n' "${latest_files}"
+    printf '    - Ready for analysis with bin/nlp-analyze\n'
+  fi
+
+  printf '\n'
+}
+
+main "$@"
