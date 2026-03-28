@@ -45,6 +45,12 @@ _check_dependencies() {
     done
     exit 1
   fi
+
+  if ! command -v ck &>/dev/null; then
+    Gum::warn "ck not found — semantic search enhancement disabled"
+    Gum::warn "  Directories with a .ck index won't produce *_semantic.jsonl files"
+    Gum::warn "  Install: cargo install ck  (https://github.com/beaconbay/ck)"
+  fi
 }
 
 # _run_category <title> <Query::func> <source_dir> <output_dir>

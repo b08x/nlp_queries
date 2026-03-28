@@ -31,6 +31,69 @@ Query::safe_rga() {
     "$@" || [[ $? -eq 1 ]]
 }
 
+# ── ck semantic search helpers ────────────────────────────────────────────────
+
+# Query::ck_find_roots — print src if it contains a .ck index, otherwise nothing.
+# Yields src itself so _ck_root always matches the provided input folder arg.
+Query::ck_find_roots() {
+  local src="$1"
+  [[ -d "${src}/.ck" ]] && echo "${src}"
+}
+
+# Query::safe_ck — ck exits 1 when no matches are found; treat that as success.
+# Silently skips if ck is not installed.
+Query::safe_ck() {
+  command -v ck &>/dev/null || return 0
+  ck "$@" || [[ $? -eq 1 ]]
+}
+
+# Query::_run_ck_semantic — run one ck query and write JSONL to stdout.
+# Callers redirect stdout to the desired output file (>> file.jsonl).
+#
+# $1  query    — natural language (sem/hybrid/lex) or regex search phrase
+# $2  ck_root  — directory containing a .ck index
+#
+# CK_SEARCH_TYPE   sem | lex | regex | hybrid  (default: sem)
+# CK_THRESHOLD     0.0–1.0                      (default: 0.4, sem/lex/hybrid only)
+# CK_RERANK        true | false                 (default: true; true → forces hybrid/RRF)
+# CK_TOPK          integer                      (default: 50)
+# CK_FULL_SECTION  true | false                 (default: true; returns complete functions)
+Query::_run_ck_semantic() {
+  local query="$1"
+  local ck_root="$2"
+
+  local _search_type="${CK_SEARCH_TYPE:-sem}"
+  local _threshold="${CK_THRESHOLD:-0.4}"
+  local _rerank="${CK_RERANK:-true}"
+  local _topk="${CK_TOPK:-50}"
+  local _full_section="${CK_FULL_SECTION:-true}"
+
+  # Reranking via RRF requires hybrid mode; upgrade silently if requested
+  [[ "${_rerank}" == "true" && "${_search_type}" != "hybrid" ]] && _search_type="hybrid"
+
+  local -a ck_flags=(--jsonl --topk "${_topk}")
+  case "${_search_type}" in
+    sem)    ck_flags+=(--sem    --threshold "${_threshold}") ;;
+    lex)    ck_flags+=(--lex    --threshold "${_threshold}") ;;
+    hybrid) ck_flags+=(--hybrid --threshold "${_threshold}") ;;
+    regex)  ck_flags+=(--regex) ;;
+    *)      ck_flags+=(--sem    --threshold "${_threshold}") ;;
+  esac
+  [[ "${_full_section}" == "true" ]] && ck_flags+=(--full-section)
+
+  # Filter on .file presence (not .preview content) so results with empty
+  # previews are not silently dropped.  When preview is absent, fall back to
+  # a span description so the match field is always informative.
+  Query::safe_ck "${ck_flags[@]}" "${query}" "${ck_root}" | \
+    jq -r 'select(type == "object") | select(.file != null) | {
+      file:   .file,
+      line:   (.span.line_start // 0),
+      symbol: (.symbol // ""),
+      score:  (.score  // 0),
+      match:  (.preview // ("lines \(.span.line_start // 0)-\(.span.line_end // 0)"))
+    }'
+}
+
 # ── 1. Chunking ───────────────────────────────────────────────────────────────
 
 Query::run_chunking() {
@@ -65,8 +128,18 @@ Query::run_chunking() {
 
   Query::safe_rga -i '(recursive|hierarch|tree).{0,25}(chunk|split)' \
     --type markdown --type py --type ruby \
-    --context 4 --max-count 75 \
+    --context 10 --max-count 75 \
     "${src}" > "${out}/hierarchical_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "text chunking strategies recursive splitting semantic segmentation" \
+      "${_ck_root}" >> "${out}/strategies_semantic.jsonl"
+    Query::_run_ck_semantic \
+      "token window size maximum token limits configuration" \
+      "${_ck_root}" >> "${out}/token_configs_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 2. Embedding ──────────────────────────────────────────────────────────────
@@ -90,7 +163,7 @@ Query::run_embedding() {
 
   Query::safe_rga '\b(384|768|1024|1536|3072|4096)\b.*dim' \
     --type py --type ruby --type json \
-    --context 2 --max-count 50 \
+    --context 10 --max-count 50 \
     "${src}" > "${out}/dimensions_raw.txt"
 
   Query::safe_rga 'pgvector|vector.*search' \
@@ -104,6 +177,21 @@ Query::run_embedding() {
            } |
            select(.file != null)' \
     > "${out}/vector_dbs.jsonl"
+
+  Query::safe_rga 'pgvector|vector.*search' \
+    --type ruby --type py --type markdown \
+    --context 10 --max-count 50 \
+    "${src}" > "${out}/vector_dbs_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "embedding model configuration dimensions vector similarity" \
+      "${_ck_root}" >> "${out}/embedding_configs_semantic.jsonl"
+    Query::_run_ck_semantic \
+      "vector database pgvector similarity search index embeddings" \
+      "${_ck_root}" >> "${out}/vector_dbs_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 3. Preprocessing ──────────────────────────────────────────────────────────
@@ -115,13 +203,23 @@ Query::run_preprocessing() {
 
   Query::safe_rga 'def (clean|normalize|preprocess|sanitize)' \
     --type ruby --type py --type markdown --type pdf \
-    --context 8 --max-count 100 \
+    --context 10 --max-count 100 \
     "${src}" > "${out}/methods_raw.txt"
 
   Query::safe_rga '(spacy|nltk|tiktoken|sentencepiece|bpe)' \
     --type py --type ruby --type json --type markdown \
-    --context 3 \
+    --context 10 \
     "${src}" > "${out}/tokenizers_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "text cleaning normalization preprocessing pipeline sanitization" \
+      "${_ck_root}" >> "${out}/methods_semantic.jsonl"
+    Query::_run_ck_semantic \
+      "tokenizer BPE sentencepiece tiktoken NLP tokenization" \
+      "${_ck_root}" >> "${out}/tokenizers_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 4. Parsers ────────────────────────────────────────────────────────────────
@@ -135,6 +233,13 @@ Query::run_parsers() {
     --type ruby --type py --type js --type markdown \
     --context 10 --max-count 75 \
     "${src}" > "${out}/markdown_splitters_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "markdown document parsing splitting by headers sections structure" \
+      "${_ck_root}" >> "${out}/markdown_splitters_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 5. Pipelines ──────────────────────────────────────────────────────────────
@@ -148,6 +253,13 @@ Query::run_pipelines() {
     --type ruby --type py --type markdown \
     --context 20 --max-count 50 \
     "${src}" > "${out}/architectures_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "RAG pipeline architecture stages ingestion retrieval augmented generation" \
+      "${_ck_root}" >> "${out}/architectures_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 6. Models ─────────────────────────────────────────────────────────────────
@@ -159,13 +271,23 @@ Query::run_models() {
 
   Query::safe_rga -i 'localhost|127\.0\.0\.1|local.*model|ollama|lm studio' \
     --type py --type ruby --type json --type markdown \
-    --context 4 \
+    --context 10 \
     "${src}" > "${out}/local_inference_raw.txt"
 
   Query::safe_rga -i 'api.*key|endpoint|openai|anthropic|together' \
     --type py --type ruby --type yaml --type markdown \
-    --context 3 \
+    --context 10 \
     "${src}" > "${out}/api_inference_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "local model inference ollama LM Studio self-hosted LLM configuration" \
+      "${_ck_root}" >> "${out}/local_inference_semantic.jsonl"
+    Query::_run_ck_semantic \
+      "API endpoint configuration OpenAI Anthropic remote model integration" \
+      "${_ck_root}" >> "${out}/api_inference_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 7. Search ─────────────────────────────────────────────────────────────────
@@ -177,8 +299,15 @@ Query::run_search() {
 
   Query::safe_rga -i 'hybrid.*search|reciprocal.*rank|rrf|fusion' \
     --type py --type ruby --type markdown \
-    --context 8 --max-count 50 \
+    --context 10 --max-count 50 \
     "${src}" > "${out}/hybrid_patterns_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "hybrid search reciprocal rank fusion retrieval augmented dense sparse" \
+      "${_ck_root}" >> "${out}/hybrid_patterns_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 8. Configs ────────────────────────────────────────────────────────────────
@@ -190,8 +319,15 @@ Query::run_configs() {
 
   Query::safe_rga 'context.*(window|size|length)|max.*(token|length|context)' \
     --type json --type yaml --type py --type markdown \
-    --context 3 --max-count 75 \
+    --context 10 --max-count 75 \
     "${src}" > "${out}/context_windows_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "context window size token limit configuration parameters settings" \
+      "${_ck_root}" >> "${out}/context_windows_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 9. Graphs ─────────────────────────────────────────────────────────────────
@@ -203,8 +339,15 @@ Query::run_graphs() {
 
   Query::safe_rga -i 'knowledge.*graph|triple.*store|entity.*relation' \
     --type py --type ruby --type markdown \
-    --context 8 --max-count 50 \
+    --context 10 --max-count 50 \
     "${src}" > "${out}/kg_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "knowledge graph entity relationship extraction triples ontology" \
+      "${_ck_root}" >> "${out}/kg_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
 
 # ── 10. Multi-Modal ───────────────────────────────────────────────────────────
@@ -216,6 +359,13 @@ Query::run_multimodal() {
 
   Query::safe_rga -i 'clip|blip|llava|vision.*model|image.*caption' \
     --type py --type markdown \
-    --context 8 --max-count 50 \
+    --context 10 --max-count 50 \
     "${src}" > "${out}/vision_raw.txt"
+
+  local _ck_root
+  while IFS= read -r _ck_root; do
+    Query::_run_ck_semantic \
+      "vision language model image captioning multimodal embeddings CLIP BLIP" \
+      "${_ck_root}" >> "${out}/vision_semantic.jsonl"
+  done < <(Query::ck_find_roots "${src}")
 }
