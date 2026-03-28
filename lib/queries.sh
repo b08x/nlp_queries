@@ -63,8 +63,8 @@ Query::_run_ck_semantic() {
   local ck_root="$2"
 
   local _search_type="${CK_SEARCH_TYPE:-sem}"
-  local _threshold="${CK_THRESHOLD:-0.4}"
-  local _rerank="${CK_RERANK:-true}"
+  local _threshold="${CK_THRESHOLD:-0.5}"
+  local _rerank="${CK_RERANK:-false}"
   local _topk="${CK_TOPK:-50}"
   local _full_section="${CK_FULL_SECTION:-true}"
 
@@ -81,16 +81,15 @@ Query::_run_ck_semantic() {
   esac
   [[ "${_full_section}" == "true" ]] && ck_flags+=(--full-section)
 
-  # Filter on .file presence (not .preview content) so results with empty
-  # previews are not silently dropped.  When preview is absent, fall back to
-  # a span description so the match field is always informative.
-  Query::safe_ck "${ck_flags[@]}" "${query}" "${ck_root}" | \
-    jq -r 'select(type == "object") | select(.file != null) | {
-      file:   .file,
-      line:   (.span.line_start // 0),
-      symbol: (.symbol // ""),
-      score:  (.score  // 0),
-      match:  (.preview // ("lines \(.span.line_start // 0)-\(.span.line_end // 0)"))
+  # ck info lines (model, config) go to stderr; redirect so only JSONL hits stdout.
+  # Real field names in ck v0.7+: .path (not .file), .snippet (not .preview).
+  # Fall back to span description when snippet is absent.
+  Query::safe_ck "${ck_flags[@]}" "${query}" "${ck_root}" 2>/dev/null | \
+    jq -r 'select(type == "object") | select(.path != null) | {
+      file:  .path,
+      line:  (.span.line_start // 0),
+      score: (.score   // 0),
+      match: (.snippet // ("lines \(.span.line_start // 0)-\(.span.line_end // 0)"))
     }'
 }
 

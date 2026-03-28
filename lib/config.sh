@@ -30,7 +30,7 @@ declare -g MIN_FILE_SIZE=100       # Bytes — ignore files smaller than this
 #   CK_TOPK         maximum results returned per ck query
 declare -g CK_SEARCH_TYPE="sem"   # sem | lex | regex | hybrid
 declare -g CK_THRESHOLD="0.5"     # 0.0–1.0; sem/lex/hybrid only (lower = broader recall)
-declare -g CK_RERANK="true"       # true → forces hybrid mode (RRF reranking)
+declare -g CK_RERANK="false"       # true → forces hybrid mode (RRF reranking)
 declare -g CK_TOPK=50             # max results per query
 declare -g CK_FULL_SECTION="true" # true → --full-section: retrieve complete functions/classes
 
