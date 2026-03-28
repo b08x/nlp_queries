@@ -7,53 +7,54 @@
 
 ## 🎯 Overview
 
-**NLP Chunking Queries** is a sophisticated bash-based analysis tool that systematically searches through source code to extract and catalog patterns, configurations, and implementations related to NLP and machine learning techniques. It combines powerful search capabilities with an intuitive terminal UI to make NLP strategy discovery accessible and organized.
+**NLP Chunking Queries** is a bash-based tool that searches source code to extract and catalog patterns, configurations, and implementations related to NLP and machine learning. It combines powerful search with an intuitive terminal UI to make NLP strategy discovery accessible.
 
 ### What Does It Do?
 
 This tool helps you:
 
-- 🔍 **Discover NLP patterns** - Find chunking strategies, embedding configurations, and preprocessing logic
-- 📊 **Analyze implementations** - Extract model integrations, search algorithms, and pipeline architectures
-- 📝 **Document findings** - Generate structured JSONL and text reports for each extraction category
-- 🎨 **Navigate results** - Beautiful terminal UI with color-coded output and interactive exploration
+- 🔍 **Discover NLP patterns** — Find chunking strategies, embedding configurations, and preprocessing logic
+- 📊 **Analyze implementations** — Extract model integrations, search algorithms, and pipeline architectures
+- 📝 **Document findings** — Generate structured JSONL and text reports for each extraction category
+- 🎨 **Navigate results** — Color-coded terminal output and interactive exploration
 
 ### Key Features
 
-- **10 Specialized Extraction Categories** - From chunking strategies to multi-modal vision models
-- **Multi-Format Search** - Searches across code (Python, Ruby, JS), configs (YAML, JSON), docs (Markdown), and even PDFs
-- **Smart Pattern Matching** - Uses regex patterns tuned for common NLP/ML implementation patterns
-- **Structured Output** - Results organized by category with both JSONL (machine-readable) and raw text formats
-- **Automated Analysis Pipeline** - 5-stage analysis generating strategy recommendations
-- **Multi-Source Support** - Extract from multiple directories in a single session
-- **Session Management** - Timestamped output directories preserve each extraction run
-- **Interactive UI** - Built with Gum (Charm Bracelet) for a polished developer experience
-- **Diagnostic Tools** - Validate extraction structure and identify issues
+- **10 Specialized Extraction Categories** — From chunking strategies to multi-modal vision models
+- **Multi-Format Search** — Searches code (Python, Ruby, JS), configs (YAML, JSON), docs (Markdown), and PDFs
+- **Smart Pattern Matching** — Regex patterns tuned for common NLP/ML implementations
+- **Structured Output** — Results organized by category in JSONL and raw text formats
+- **Automated Analysis Pipeline** — 5-stage analysis generating strategy recommendations
+- **Multi-Source Support** — Extract from multiple directories in one session
+- **Session Management** — Timestamped output directories preserve each run
+- **Interactive UI** — Built with Gum for a polished developer experience
+- **Diagnostic Tools** — Validate extraction structure and identify issues
 
 ### Complete Workflow
 
-```
+```shell
 ┌─────────────────────────────────────────────────────────────────┐
-│                     NLP Strategy Extraction                      │
+│                        bin/nlpq.sh                               │
+│                   Primary Pipeline Entrypoint                    │
 └─────────────────────────────────────────────────────────────────┘
-
-1️⃣  EXTRACTION                   2️⃣  VALIDATION               3️⃣  ANALYSIS
-┌──────────────────┐            ┌──────────────────┐        ┌──────────────────┐
-│ nlp_extractor.sh │───────────▶│diag_extraction.sh│───────▶│nlp_strategy_     │
-│                  │            │                  │        │  analyzer.sh     │
-│ • Select sources │            │ • Verify runs    │        │                  │
-│ • Pick categories│            │ • Check files    │        │ • Inventory      │
-│ • Run queries    │            │ • Report issues  │        │ • Sample data    │
-└──────────────────┘            └──────────────────┘        │ • Extract patterns│
-        │                               │                   │ • Generate strategy│
-        ▼                               ▼                   └──────────────────┘
-output/run_TIMESTAMP/         ✓ Structure validated                │
-├── source1/                  ✓ Files present                      ▼
-│   ├── chunking/             ✓ Ready for analysis         analysis/analysis_TIMESTAMP/
-│   ├── embedding/                                         ├── inventory.md
-│   └── ...                                                ├── patterns.md
-└── source2/                                               ├── strategy.md
-    ├── chunking/                                          └── samples/
+         │                    │                    │
+         ▼                    ▼                    ▼
+1️⃣  EXTRACTION          2️⃣  VALIDATION       3️⃣  ANALYSIS
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│ bin/nlp-extract  │─▶│ bin/nlp-diag     │─▶│ bin/nlp-analyze  │
+│                  │  │                  │  │                  │
+│ • Select sources │  │ • Verify runs    │  │ • Inventory      │
+│ • Pick categories│  │ • Check files    │  │ • Sample data    │
+│ • Run queries    │  │ • Report issues  │  │ • Extract patterns│
+└──────────────────┘  └──────────────────┘  │ • Generate strategy│
+        │                      │            └──────────────────┘
+        ▼                      ▼                    │
+output/run_TIMESTAMP/  ✓ Structure validated         ▼
+├── source1/           ✓ Files present      analysis/analysis_TIMESTAMP/
+│   ├── chunking/      ✓ Ready for analysis ├── inventory.md
+│   ├── embedding/                          ├── patterns.md
+│   └── ...                                 ├── strategy.md
+└── source2/                                └── samples/
     └── ...
 ```
 
@@ -93,93 +94,85 @@ The tool requires the following dependencies:
 3. **Make scripts executable:**
 
    ```bash
-   chmod +x nlp_extractor.sh nlp_strategy_analyzer.sh diag_extraction.sh
+   chmod +x bin/*
    ```
 
-4. **Run your first extraction:**
+4. **Run the full pipeline:**
 
    ```bash
-   # Interactive mode (prompts for source directory)
-   ./nlp_extractor.sh
-   
-   # Or specify source directory directly
-   ./nlp_extractor.sh ~/path/to/codebase
+   # Interactive mode — prompts for mode, output dir, and source directory
+   bin/nlpq.sh
+
+   # Or specify source directory directly (runs full pipeline)
+   bin/nlpq.sh ~/path/to/codebase
    ```
 
    The tool will automatically download and install `gum` (v0.16.0) to `~/.local/bin/` if not found.
 
-5. **Analyze results:**
+5. **Run individual stages:**
 
    ```bash
-   # Validate extraction
-   ./diag_extraction.sh
-   
-   # Run analysis pipeline
-   ./nlp_strategy_analyzer.sh
+   bin/nlp-extract              # Extraction only
+   bin/nlp-diag                 # Validate extraction
+   bin/nlp-analyze              # Run analysis pipeline
    ```
 
 ## 🚀 Usage
 
 ### Basic Workflow
 
-**Single-Source Extraction:**
+**Full Pipeline (recommended):**
 
-1. **Launch the interactive CLI:**
+1. **Launch the entrypoint:**
 
    ```bash
-   ./nlp_extractor.sh
+   bin/nlpq.sh
    ```
 
-2. **Configure source directory:**
+2. **Select pipeline mode** — Full Pipeline, Extract Only, Analyze Only, or Diagnose Only
+
+3. **Configure output directory** — default is `~/nlpq_TIMESTAMP`
+
+4. **Configure source directory** (extraction modes only)
    - Default: `$HOME/Notebook`
    - Enter custom path when prompted
 
-3. **Select extraction categories:**
-   - Choose one or more from 10 available strategies
-   - Use arrow keys and space bar to select
+5. **Select extraction categories** — choose from 10 available strategies
 
-4. **Review results:**
-   - Output saved to timestamped directory: `output/run_YYYYMMDD_HHMMSS/<source_dir>/`
-   - Option to explore results in pager or exit
+6. **Review results** — output saved under the directory you specified
 
 **Multi-Source Extraction:**
 
-Extract from multiple directories in one session:
+Pass source directories as arguments to run the full pipeline without prompts:
 
 ```bash
-./nlp_extractor.sh ~/Projects/ml-codebase ~/Research/nlp-experiments ~/Notebook
+bin/nlpq.sh ~/Projects/ml-codebase ~/Research/nlp-experiments ~/Notebook
 ```
 
-Each source directory gets its own subdirectory in the output run.
+**Individual Stages:**
+
+Run stages directly when you need more control:
+
+```bash
+bin/nlp-extract              # Extraction only (interactive)
+bin/nlp-extract ~/repo1 ~/repo2  # Extraction with source dirs
+
+bin/nlp-analyze              # Analysis on most recent extraction
+bin/nlp-diag                 # Validate extraction structure
+```
 
 **Analysis Pipeline:**
 
-After extraction, analyze patterns and generate strategy recommendations:
-
-```bash
-./nlp_strategy_analyzer.sh
-```
-
-This processes the most recent extraction run and generates:
+After extraction, the analyzer processes the most recent run and generates:
 - Inventory of discovered content
 - Stratified samples for manual review
 - Pattern frequency analysis
 - Strategy compilation recommendations
 
-**Diagnostic Validation:**
-
-Validate extraction run structure:
-
-```bash
-./diag_extraction.sh
-```
-
-Useful for debugging empty results or verifying extraction completion.
-
 ### Example Session
 
 ```bash
-$ ./nlp_extractor.sh
+$ bin/nlpq.sh
 
 ╔════════════════════════════════════════╗
 ║                                        ║
@@ -221,45 +214,43 @@ Choose: Explore | Exit
 
 ## 💡 Use Cases
 
-This tool is particularly useful for:
-
 **Research & Discovery**
-- Auditing how different teams/projects handle NLP tasks
-- Discovering implementation patterns across large codebases
-- Finding examples of specific techniques (e.g., "how do we handle chunking?")
-- Identifying inconsistencies in NLP strategy across projects
+- Audit how different teams handle NLP tasks
+- Discover implementation patterns across large codebases
+- Find examples of specific techniques
+- Identify inconsistencies in NLP strategy
 
 **Documentation & Knowledge Management**
-- Cataloging existing NLP implementations for onboarding
-- Creating a reference library of proven patterns
-- Extracting configuration baselines for new projects
-- Generating API/method inventories from legacy code
+- Catalog existing NLP implementations for onboarding
+- Create a reference library of proven patterns
+- Extract configuration baselines for new projects
+- Generate API/method inventories from legacy code
 
 **Refactoring & Consolidation**
-- Finding duplicate or similar NLP implementations to consolidate
-- Identifying candidates for shared library extraction
-- Spotting outdated patterns that need modernization
-- Mapping dependencies between NLP components
+- Find duplicate or similar NLP implementations to consolidate
+- Identify candidates for shared library extraction
+- Spot outdated patterns that need modernization
+- Map dependencies between NLP components
 
 **Compliance & Standards**
-- Verifying adherence to NLP best practices
-- Auditing model usage and API integrations
-- Finding hardcoded values that should be configurable
-- Tracking which embedding dimensions are in use
+- Verify adherence to NLP best practices
+- Audit model usage and API integrations
+- Find hardcoded values that should be configurable
+- Track which embedding dimensions are in use
 
 **Example Scenarios:**
 
-1. **"We need to standardize our chunking strategy across 5 microservices"**
+1. **"Standardize chunking across 5 microservices"**
    - Extract chunking patterns from all services
    - Compare token windows, overlap ratios, and splitting logic
    - Generate recommendations for unified approach
 
-2. **"What embedding models are we currently using in production?"**
+2. **"What embedding models are in production?"**
    - Run embedding extraction across all repositories
    - Analyze dimension configurations and model references
    - Identify version drift and upgrade candidates
 
-3. **"Document all our NLP preprocessing functions for the new team"**
+3. **"Document NLP preprocessing for the new team"**
    - Extract preprocessing and parser implementations
    - Sample representative code with context
    - Generate method catalog with signatures
@@ -404,13 +395,17 @@ overlap = 128
 ## 🏗️ Project Structure
 
 ```
-nlp_chunking_queries/
-├── nlp_extractor.sh          # Interactive extraction CLI
-├── nlp_strategy_analyzer.sh  # Automated analysis pipeline
-├── diag_extraction.sh         # Diagnostic validation utility
+nlp_queries/
+├── bin/
+│   ├── nlpq.sh               # Primary entrypoint — full pipeline orchestrator
+│   ├── nlp-extract           # Interactive extraction CLI
+│   ├── nlp-analyze           # Automated 5-stage analysis pipeline
+│   └── nlp-diag              # Diagnostic validation utility
 ├── lib/
-│   ├── gum_wrapper.sh        # UI framework & error handling
-│   └── queries.sh            # Query functions for 10 categories
+│   ├── config.sh             # Shared constants (colors, sampling params)
+│   ├── log.sh                # Log::* functions (info, warn, error, stage)
+│   ├── gum.sh                # Gum::* UI wrappers & error handling
+│   └── queries.sh            # Query::run_* functions for 10 categories
 ├── output/                   # Generated extraction results (timestamped)
 │   └── run_YYYYMMDD_HHMMSS/
 │       └── <source_dir>/
@@ -431,63 +426,74 @@ nlp_chunking_queries/
 │       ├── strategy.md       # Compilation recommendations
 │       └── samples/          # Stratified sample data
 └── logs/                     # Session logs
-    └── setup_YYYYMMDD_HHMMSS.log
+    └── session_YYYYMMDD_HHMMSS.log
 ```
 
 ### Core Components
 
-#### `nlp_extractor.sh`
+#### `bin/nlpq.sh`
 
-Interactive extraction orchestrator that:
+Primary entrypoint that orchestrates the full pipeline:
+- Interactive mode selection (Full Pipeline / Extract Only / Analyze Only / Diagnose Only)
+- Prompts for output directory (default: `~/nlpq_TIMESTAMP`)
+- Prompts for source directory when extraction is needed
+- Exports `NLPQ_OUTPUT_BASE` and `NLPQ_ANALYSIS_OUTPUT` for downstream scripts
+- Runs `nlp-extract → nlp-diag → nlp-analyze` in sequence
 
-- Manages user configuration (source directory selection)
-- Handles category selection via interactive menu (multi-select)
+#### `bin/nlp-extract`
+
+Interactive extraction orchestrator:
+- Manages source directory selection (args or prompt)
+- Handles category selection via interactive menu
 - Supports multiple source directories via command-line arguments
-- Executes extraction functions with progress indicators
+- Executes `Query::run_*` functions with Gum spinners
 - Displays results and provides exploration options
-- Error handling and session logging
+- Respects `NLPQ_OUTPUT_BASE` env var (defaults to `output/`)
 
-#### `nlp_strategy_analyzer.sh`
+#### `bin/nlp-analyze`
 
-Automated 5-stage analysis pipeline that:
-
-- **Stage 1: Discovery** - Locates and selects most recent extraction run
-- **Stage 2: Inventory** - Analyzes content distribution across categories
-- **Stage 3: Sampling** - Performs stratified sampling (50 JSONL lines, 100 raw text lines per file)
-- **Stage 4: Pattern Extraction** - Extracts method signatures, common patterns, config values
-- **Stage 5: Strategy Formulation** - Generates compilation recommendations and next steps
+Automated 5-stage analysis pipeline:
+- **Stage 1: Discovery** — Locates and selects most recent extraction run
+- **Stage 2: Inventory** — Analyzes content distribution across categories
+- **Stage 3: Sampling** — Performs stratified sampling (50 JSONL lines, 100 raw text lines per file)
+- **Stage 4: Pattern Extraction** — Extracts method signatures, common patterns, config values
+- **Stage 5: Strategy Formulation** — Generates compilation recommendations and next steps
 
 Outputs timestamped analysis artifacts to `analysis/analysis_YYYYMMDD_HHMMSS/`
 
-#### `diag_extraction.sh`
+#### `bin/nlp-diag`
 
-Diagnostic validation utility that:
-
-- Scans `output/` directory for extraction runs
+Diagnostic validation utility:
+- Scans `output/` for extraction runs (or `NLPQ_OUTPUT_BASE` if set)
 - Reports file counts by category and source directory
 - Validates run structure integrity
-- Identifies empty or malformed extraction runs
+- Identifies empty or malformed runs
 - Provides recommendations for next steps
 
-#### `lib/gum_wrapper.sh`
+#### `lib/config.sh`
 
-UI framework providing:
+Shared constants: `GUM_VERSION`, terminal color codes, sampling parameters (`SAMPLE_SIZE_JSONL`, `SAMPLE_SIZE_RAW`, `MIN_FILE_SIZE`). Sourced first by all bin scripts.
 
-- Styled terminal output (title, info, warn, fail)
-- Interactive components (confirm, input, choose, filter)
-- Auto-downloading of gum binary if not available
-- Comprehensive error trapping and logging
-- Automatic cleanup and signal handling
+#### `lib/log.sh`
+
+Logging under `Log::` namespace: `Log::setup <dir>` creates a timestamped log file. `Log::info/warn/error/success/stage` write to both stderr and the log file.
+
+#### `lib/gum.sh`
+
+UI framework under `Gum::` namespace:
+- Styled terminal output (`Gum::style`, `Gum::title`, `Gum::info`, `Gum::warn`, `Gum::fail`)
+- Interactive components (`Gum::confirm`, `Gum::input`, `Gum::choose`, `Gum::spin`)
+- Auto-downloads gum binary to `~/.local/bin/` if not available
+- `Gum::install_traps` registers EXIT/ERR handlers
 
 #### `lib/queries.sh`
 
 Query engine containing:
-
-- 10 specialized extraction functions (`run_<category>_queries`)
+- 10 specialized extraction functions (`Query::run_<category>`)
 - Regex patterns for NLP/ML implementations
-- `safe_rga` wrapper for graceful "no matches" handling
+- `Query::safe_rga` wrapper for graceful "no matches" handling
 - JSON parsing and output formatting with `jq`
-- Directory structure management
+- Directory structure management via `Query::_ensure_dir`
 
 ## 🔧 Technical Details
 
@@ -525,7 +531,7 @@ User Input
                     │
                     ▼
             ┌───────────────────────────────────┐
-            │  Analysis Engine (analyzer.sh)    │
+            │  Analysis Engine (bin/nlp-analyze) │
             │                                    │
             │  Stage 1: Discovery               │
             │  Stage 2: Inventory Analysis      │
@@ -544,20 +550,18 @@ User Input
 
 ### Search Technology
 
-**ripgrep-all (rga)** is the core search engine, chosen for:
-
-- **Multi-format support** - Searches inside PDFs, Office docs, compressed archives
-- **Speed** - Rust-based parallelized search optimized for large codebases
-- **Regex power** - Full regex support with context line retrieval
-- **JSON output** - Structured output for programmatic processing
+We chose **ripgrep-all (rga)** as the core search engine because it offers:
+- **Multi-format support** — Searches inside PDFs, Office docs, compressed archives
+- **Speed** — Rust-based parallelized search optimized for large codebases
+- **Regex power** — Full regex support with context line retrieval
+- **JSON output** — Structured output for programmatic processing
 
 ### Pattern Design Philosophy
 
-Query patterns are designed to balance:
-
-- **Precision** - Avoid false positives (e.g., `chunk.*strateg` vs just `chunk`)
-- **Recall** - Capture variations (e.g., `semantic.*split` allows "semantic_split", "semantic split", "semanticSplit")
-- **Performance** - Use file type filters (`--type py`) to reduce search space
+We designed query patterns to balance:
+- **Precision** — Avoid false positives (e.g., `chunk.*strateg` vs just `chunk`)
+- **Recall** — Capture variations (e.g., `semantic.*split` matches "semantic_split", "semantic split", "semanticSplit")
+- **Performance** — Use file type filters (`--type py`) to reduce search space
 
 **Example pattern breakdown:**
 
@@ -570,11 +574,13 @@ safe_rga -i '(recursive|hierarch|tree).{0,25}(chunk|split)' \
     "$src" > "$out/hierarchical_raw.txt"
 ```
 
-- `(recursive|hierarch|tree)` - Alternative prefixes
-- `.{0,25}` - Allow up to 25 characters between prefix and suffix
-- `(chunk|split)` - Alternative suffixes
-- `--context 4` - Include 4 lines before/after match for context
-- `--max-count 75` - Limit to 75 matches to prevent overwhelming output
+| Element | Meaning |
+|---------|---------|
+| `(recursive|hierarch\|tree)` | Alternative prefixes |
+| `.{0,25}` | Up to 25 characters between prefix and suffix |
+| `(chunk\|split)` | Alternative suffixes |
+| `--context 4` | 4 lines before/after match |
+| `--max-count 75` | Limit matches to 75 |
 
 ### Output Formats
 
@@ -598,10 +604,10 @@ path/to/file.py:42:
 
 The tool implements robust error handling:
 
-1. **Dependency checks** - Pre-flight validation of `rga` and `jq`
-2. **Graceful "no matches"** - `safe_rga` wrapper treats empty results as success
-3. **Session logging** - Errors logged to `${SESSION_OUTPUT}/${func_name}_errors.log`
-4. **Trap functions** - Automatic cleanup on script exit or interruption
+1. **Dependency checks** — Pre-flight validation of `rga` and `jq`
+2. **Graceful "no matches"** — `safe_rga` wrapper treats empty results as success
+3. **Session logging** — Errors logged to `${SESSION_OUTPUT}/${func_name}_errors.log`
+4. **Trap functions** — Automatic cleanup on script exit or interruption
 
 ## 🎨 UI Components (Gum)
 
@@ -629,34 +635,27 @@ The tool uses [Charm Bracelet's Gum](https://github.com/charmbracelet/gum) libra
 
 To add a new extraction category:
 
-1. **Add query function to `lib/queries.sh`:**
+1. **Add `Query::run_<name>` to `lib/queries.sh`:**
 
    ```bash
-   run_custom_queries() {
-       local src="$1"
-       local out="$2/custom"
-       ensure_dir "$out"
+   Query::run_custom() {
+     local src="$1"
+     local out="$2/custom"
+     Query::_ensure_dir "${out}"
 
-       safe_rga 'your.*pattern' \
-           --type py --type ruby \
-           "$src" \
-           --json | \
-           jq -r 'select(.type == "match") | {...}' \
-           > "$out/custom_results.jsonl"
+     Query::safe_rga -i 'your.*pattern' \
+       --type py --type ruby \
+       "${src}" --json | \
+       jq -r 'select(.type == "match") |
+              {file: .data.path.text, match: .data.lines.text}' \
+       > "${out}/custom_results.jsonl"
    }
    ```
 
-2. **Register in `nlp_extractor.sh`:**
+2. **Register in `bin/nlp-extract`** — add to the `options` array and the `case` dispatch:
 
    ```bash
-   # Update OPTIONS array
-   OPTIONS=("..." "11. Custom")
-
-   # Add case handler
-   case "$category" in
-       ...
-       *"11. Custom"*) execute_extraction "Custom" "run_custom_queries" || true ;;
-   esac
+   *"11. Custom"*) _run_category "Custom" "Query::run_custom" "${src_dir}" "${src_output}" || true ;;
    ```
 
 ### Pattern Testing
@@ -680,15 +679,10 @@ Enable verbose logging:
 
 ```bash
 # Logs are automatically created in logs/ directory
-./nlp_extractor.sh
+bin/nlpq.sh
 
 # View latest log
-tail -f logs/setup_*.log
-
-# Or specify custom log location
-export LOG_FILE=/tmp/nlp_extractor.log
-./nlp_extractor.sh
-tail -f /tmp/nlp_extractor.log
+tail -f logs/session_*.log
 ```
 
 ### Advanced Usage
@@ -696,20 +690,23 @@ tail -f /tmp/nlp_extractor.log
 **Complete Command Reference:**
 
 ```bash
-# Interactive extraction (single source)
-./nlp_extractor.sh
+# Full interactive pipeline (recommended)
+bin/nlpq.sh
 
-# Batch extraction (multiple sources)
-./nlp_extractor.sh /path/to/source1 /path/to/source2
+# Full pipeline with source directories (skips source dir prompt)
+bin/nlpq.sh /path/to/source1 /path/to/source2
 
-# Analysis pipeline (processes latest extraction)
-./nlp_strategy_analyzer.sh
+# Individual stages
+bin/nlp-extract                    # Extraction only (interactive)
+bin/nlp-extract ~/repo1 ~/repo2    # Extraction with source dirs
+bin/nlp-analyze                    # Analysis on most recent extraction
+bin/nlp-diag                       # Diagnostic validation
 
-# Diagnostic validation
-./diag_extraction.sh
+# Custom output directory (overrides prompt)
+NLPQ_OUTPUT_BASE=~/my_results bin/nlpq.sh
 
 # Custom gum binary location
-GUM=/usr/local/bin/gum ./nlp_extractor.sh
+GUM=/usr/local/bin/gum bin/nlpq.sh
 ```
 
 **Working with Extraction Outputs:**
@@ -742,19 +739,21 @@ The `safe_rga` function in `lib/queries.sh` accepts standard rga options:
 -j 4                                        # 4 parallel jobs
 ```
 
-Edit `lib/queries.sh` line 15 to customize these defaults.
+Edit `Query::safe_rga` in `lib/queries.sh` to customize these defaults.
 
 ## 📊 Analysis Pipeline Details
 
-The `nlp_strategy_analyzer.sh` provides deep insights into extraction results:
+The `bin/nlp-analyze` script provides deep insights into extraction results:
 
 ### Stage 1: Discovery
-Scans `output/` directory and selects the most recent extraction run. Displays:
+
+Scans `output/` and selects the most recent run. Displays:
 - Run timestamp
 - Number of source directories processed
 - Category counts per source
 
 ### Stage 2: Inventory Analysis
+
 Generates `inventory.md` with:
 - File counts by category (JSONL vs raw text)
 - Directory sizes
@@ -762,35 +761,36 @@ Generates `inventory.md` with:
 - Warnings for empty categories
 
 ### Stage 3: Stratified Sampling
-Creates `samples/` directory with representative data:
+
+Creates `samples/` with representative data:
 - 50 random lines per JSONL file
 - 100 random lines per raw text file
 - Filters files smaller than 100 bytes
 - Organized by category for manual review
 
 ### Stage 4: Pattern Extraction
-Generates `patterns.md` containing:
-- **Method Signatures**: Function/class definitions from code samples
-- **Common Patterns**: Frequency analysis of technical terms (chunking, embedding, search)
-- **Configuration Patterns**: Extracted dimension values and parameter settings
+
+Generates `patterns.md`:
+- **Method Signatures** — Function/class definitions from code samples
+- **Common Patterns** — Frequency analysis of technical terms
+- **Configuration Patterns** — Extracted dimension values and parameter settings
 
 ### Stage 5: Strategy Formulation
-Produces `strategy.md` with:
-- Recommended compilation approaches (taxonomy construction, method cataloging)
+
+Produces `strategy.md`:
+- Recommended compilation approaches
 - Next steps for deep analysis
 - Quality metrics and coverage assessment
-- Artifact blueprints (method catalog, config repository, pattern library)
 
 ## 🤝 Contributing
 
 Contributions are welcome! Areas for enhancement:
-
-- **Additional extraction categories** - Security patterns, optimization techniques, etc.
-- **Pattern refinement** - Improve precision/recall for existing patterns
-- **Output formats** - CSV, Markdown tables, HTML reports
-- **Analysis enhancements** - Dependency graphs, cross-category correlation
-- **Integration** - Export to note-taking apps, documentation generators
-- **Performance** - Parallel extraction across categories
+- **Additional extraction categories** — Security patterns, optimization techniques
+- **Pattern refinement** — Improve precision/recall for existing patterns
+- **Output formats** — CSV, Markdown tables, HTML reports
+- **Analysis enhancements** — Dependency graphs, cross-category correlation
+- **Integration** — Export to note-taking apps, documentation generators
+- **Performance** — Parallel extraction across categories
 
 ## 📝 License
 
@@ -812,12 +812,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Large codebase (>10000 files): 5-15 minutes per category
 
 **Factors affecting speed:**
-- Number of file types searched (PDF parsing is slower)
+- File types searched (PDF parsing is slower)
 - Regex complexity (lookaheads/lookbehinds are slower)
 - Directory depth and file count
 - Available CPU cores (rga uses parallelization)
 
 **Optimization tips:**
+
 ```bash
 # Limit search to specific file types
 # Edit lib/queries.sh to remove unnecessary --type flags
@@ -866,42 +867,17 @@ Planned enhancements:
 **Q: Can I search multiple codebases in one run?**  
 A: Yes! Pass multiple directories as arguments:
 ```bash
-./nlp_extractor.sh ~/repo1 ~/repo2 ~/repo3
+bin/nlpq.sh ~/repo1 ~/repo2 ~/repo3
 ```
-Each gets its own subdirectory in the output.
 
-**Q: How do I exclude certain directories or files?**  
-A: Edit your `~/.gitignore` (rga respects gitignore by default), or modify the `--ignore-file` path in `lib/queries.sh` line 15.
-
-**Q: Can I run only specific categories without the interactive menu?**  
-A: Currently no. The tool requires interactive selection. You can modify `nlp_extractor.sh` to accept category arguments if needed.
-
-**Q: What if my extraction returns no results?**  
-A: This means no matches were found for the search patterns. Check:
-- Source directory contains relevant file types (.py, .rb, .md, etc.)
-- Files actually contain NLP-related code
-- Regex patterns match your codebase's naming conventions
+**Q: How do I exclude certain directories?**  
+A: Edit your `~/.gitignore` (rga respects gitignore by default), or modify `--ignore-file` in `lib/queries.sh`.
 
 **Q: Can I customize the regex patterns?**  
-A: Yes! Edit `lib/queries.sh` and modify the patterns in each `run_<category>_queries()` function. Test with `rga` command line first.
-
-**Q: How much disk space do I need?**  
-A: Extraction outputs are typically small:
-- 1-10 MB per category for medium codebases
-- Analysis samples add another 1-5 MB
-- Logs are minimal (<1 MB)
+A: Yes! Edit `lib/queries.sh` and modify patterns in each `run_<category>_queries()` function. Test with `rga` first.
 
 **Q: Is this safe to run on production code?**  
-A: Yes, it's read-only. The tool only searches files and writes to `output/`, `analysis/`, and `logs/` directories. It never modifies source code.
-
-**Q: Can I integrate this into CI/CD?**  
-A: Yes, but you'll need to bypass interactive prompts:
-```bash
-# Run with predefined directory (still requires category selection)
-./nlp_extractor.sh /path/to/repo
-
-# For full automation, modify nlp_extractor.sh to accept --categories flag
-```
+A: Yes, it's read-only. The tool only searches files and writes to `output/`, `analysis/`, and `logs/` directories.
 
 ## 🐛 Troubleshooting
 
@@ -912,23 +888,13 @@ A: Yes, but you'll need to bypass interactive prompts:
 ```bash
 # Solution: Install ripgrep-all
 cargo install ripgrep-all
-# Or download binary from: https://github.com/phiresky/ripgrep-all/releases
 ```
 
 **Issue:** `jq: command not found`
 
 ```bash
-# Solution: Install jq
 sudo dnf install jq  # Fedora/RHEL
 sudo apt install jq  # Ubuntu/Debian
-```
-
-**Issue:** Gum auto-download fails
-
-```bash
-# Solution: Manual installation
-curl -L https://github.com/charmbracelet/gum/releases/download/v0.16.0/gum_0.16.0_Linux_x86_64.tar.gz | tar xz
-sudo mv gum /usr/local/bin/
 ```
 
 **Issue:** Empty results for all categories
@@ -946,7 +912,7 @@ rga 'test' $SOURCE_DIR --type py
 
 ```bash
 # Ensure scripts are executable
-chmod +x nlp_extractor.sh nlp_strategy_analyzer.sh diag_extraction.sh
+chmod +x bin/*
 
 # Check output directory permissions
 ls -la output/
@@ -955,14 +921,9 @@ ls -la output/
 **Issue:** Analysis pipeline fails with "No extraction runs found"
 
 ```bash
-# Verify extraction runs exist
-ls -la output/
-
-# Run diagnostic to validate structure
-./diag_extraction.sh
-
-# Ensure you've run extraction first
-./nlp_extractor.sh
+ls -la output/                    # Verify runs exist
+bin/nlp-diag                      # Validate structure
+bin/nlp-extract                   # Run extraction first
 ```
 
 **Issue:** Stratified sampling produces empty files
@@ -979,26 +940,18 @@ find output/ -name "*.jsonl" -o -name "*_raw.txt" | xargs wc -l
 
 ### Getting Help
 
-**Found a bug?** Open an issue on GitHub with:
-- Your operating system and shell version (`bash --version`)
-- Steps to reproduce the issue
-- Relevant logs from `logs/setup_*.log`
-- Output of `./diag_extraction.sh`
+**Found a bug?** Open an issue with:
+- OS and shell version (`bash --version`)
+- Steps to reproduce
+- Relevant logs from `logs/session_*.log`
+- Output of `bin/nlp-diag`
 
-**Have a question?** Check the FAQ section above first, then:
-- Search existing GitHub issues
-- Open a new discussion on GitHub
-- Tag the issue appropriately (question, bug, enhancement)
-
-**Want to contribute?** See the Contributing section above and:
-- Fork the repository
-- Create a feature branch
-- Submit a pull request with tests/examples
+**Want to contribute?** Fork the repo, create a feature branch, and submit a PR.
 
 ### Resources
 
-- **Repository**: https://github.com/b08x/nlp_queries
-- **Issue Tracker**: https://github.com/b08x/nlp_queries/issues
+- **Repository**: <https://github.com/b08x/nlp_queries>
+- **Issue Tracker**: <https://github.com/b08x/nlp_queries/issues>
 - **Documentation**: This README + `AGENTS.md` files
 
 ### Related Projects

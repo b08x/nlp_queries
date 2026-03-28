@@ -10,7 +10,7 @@ Bash-based NLP strategy extraction CLI. Searches codebases for NLP/ML patterns (
 
 ## STRUCTURE
 
-```
+```shell
 nlp_queries/
 ├── nlp_extractor.sh          # Interactive CLI - select categories, run extractions
 ├── nlp_strategy_analyzer.sh  # Automated 5-stage analysis pipeline
@@ -37,19 +37,23 @@ nlp_queries/
 ## CONVENTIONS
 
 **Bash Strictness:**
+
 - All scripts use `set -e` variants (exit on error)
 - `safe_rga` wrapper: treats no-matches (exit 1) as success
 
 **Error Handling:**
+
 - Traps on ERR/EXIT write errors to `$ERROR_MSG` temp file
 - Logs to `logs/setup_YYYYMMDD_HHMMSS.log`
 - Category errors: `${SESSION_OUTPUT}/${func_name}_errors.log`
 
 **Output Formats:**
+
 - JSONL: `rga --json | jq -r 'select(.type == "match") | {file, line, match}'`
 - Raw text: `rga --context N > output_raw.txt`
 
 **Regex Patterns (queries.sh):**
+
 - Case-insensitive: `-i` flag
 - Flexible spacing: `.*` between terms (e.g., `chunk.*strateg`)
 - Alternatives: `(recursive|hierarch|tree).{0,25}(chunk|split)`
@@ -57,10 +61,12 @@ nlp_queries/
 - Max results: `--max-count 75` to prevent overwhelming output
 
 **File Type Filters:**
+
 - Always use `--type py --type ruby --type markdown --type json` etc.
 - Avoids searching binaries, images, generated files
 
 **Safe File Iteration:**
+
 ```bash
 while IFS= read -r file; do
     # process
@@ -78,6 +84,7 @@ done < <(find ... -print0 | xargs -0 ...)
 ## UNIQUE STYLES
 
 **Color-Coded UI (gum):**
+
 - Purple (212): Titles, prompts, interactive elements
 - Green (36): Success messages, summaries, property values
 - Yellow (221): Warnings, info messages
@@ -85,10 +92,12 @@ done < <(find ... -print0 | xargs -0 ...)
 - White (251): Standard text
 
 **Session Management:**
+
 - Output dirs: `output/run_YYYYMMDD_HHMMSS/<category>/`
 - Timestamped logs: `logs/setup_YYYYMMDD_HHMMSS.log`
 
 **Gum Auto-Install:**
+
 - First run downloads gum v0.16.0 to `~/.local/bin/`
 - Checks system paths before downloading
 
@@ -132,11 +141,13 @@ mv gum ~/.local/bin/
 **LSP Support:** No bash-ls installed. Install for linting: `npm install -g bash-language-server`.
 
 **Dependencies:**
+
 - ripgrep-all (rga): Multi-format search (PDFs, archives)
 - jq: JSON processing
 - gum: Terminal UI (auto-installed)
 
 **rga Configuration:**
+
 - Uses `~/.gitignore` as ignore file
 - Runs with 4 parallel jobs (`-j 4`)
 - Adapters: poppler (PDFs), pandoc (docs)
