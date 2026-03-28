@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codemap hook session-start && echo 'git diff:' && git diff --stat && echo 'git status:' && git status"
+          }
+        ]
+      }
+    ]
+  }
+}
