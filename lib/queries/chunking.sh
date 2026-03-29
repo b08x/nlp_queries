@@ -11,7 +11,7 @@ Query::run_chunking() {
   Query::_ensure_dir "${out}"
 
   Query::safe_rga -i 'chunk.*strateg|semantic.*split|text.*segment' \
-    --type markdown --type pdf --type ruby --type typescript --type json \
+    --type markdown --type pdf --type ruby --type typescript --type json --type py \
     "${src}" --json | \
     jq -r 'select(type == "object") |
            select(.type == "match") |

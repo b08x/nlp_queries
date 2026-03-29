@@ -11,7 +11,7 @@ Query::run_embedding() {
   Query::_ensure_dir "${out}"
 
   Query::safe_rga 'informers|sentence-transformers|model.*embed' \
-    --type json --type yaml --type markdown --type ruby \
+    --type json --type yaml --type markdown --type ruby --type py \
     "${src}" --json | \
     jq -r 'select(.type == "match") |
            select(.data != null) |
@@ -28,7 +28,7 @@ Query::run_embedding() {
     '\b(384|768|1024|1536|3072|4096)\b.*dim' \
     "${src}" "py, ruby, json" 10 50 \
     -n '\b(384|768|1024|1536|3072|4096)\b.*dim' \
-    --type py --type ruby --type json \
+    --type py --type ruby --type json --type markdown \
     --context 10 --max-count 50 \
     "${src}"
 

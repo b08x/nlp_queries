@@ -15,7 +15,7 @@ Query::run_multimodal() {
     'clip|blip|llava|vision.*model|image.*caption' \
     "${src}" "py, markdown" 10 50 \
     -n -i 'clip|blip|llava|vision.*model|image.*caption' \
-    --type py --type markdown \
+    --type py --type markdown --type ruby \
     --context 10 --max-count 50 \
     "${src}"
 

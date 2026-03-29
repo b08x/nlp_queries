@@ -27,7 +27,7 @@ Query::run_parsers() {
     '(PDF::Reader|docling|reader\.pages|page\.text|pdf_reader|HexaPDF)' \
     "${src}" "ruby" 10 75 \
     -n -i '(PDF::Reader|docling|reader\.pages|page\.text|pdf_reader|HexaPDF)' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 10 --max-count 75 \
     "${src}"
 
@@ -37,7 +37,7 @@ Query::run_parsers() {
     '(Docx::Document|\.docx|\.paragraphs|\.tables|doc\.each_paragraph|document\.open)' \
     "${src}" "ruby" 10 75 \
     -n -i '(Docx::Document|\.docx|\.paragraphs|\.tables|doc\.each_paragraph|document\.open)' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 10 --max-count 75 \
     "${src}"
 
@@ -47,7 +47,7 @@ Query::run_parsers() {
     '(Nokogiri::HTML|nokogiri.*parse|doc\.css|doc\.at_css|doc\.search|\.at_css|\.css\()' \
     "${src}" "ruby" 10 75 \
     -n -i '(Nokogiri::HTML|nokogiri.*parse|doc\.css|doc\.at_css|doc\.search|\.at_css|\.css\()' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 10 --max-count 75 \
     "${src}"
 
@@ -57,7 +57,7 @@ Query::run_parsers() {
     '(Nokogiri::XML|doc\.xpath|doc\.at_xpath|\.xpath\(|\.at_xpath|Nokogiri::XML\.parse)' \
     "${src}" "ruby" 10 75 \
     -n -i '(Nokogiri::XML|doc\.xpath|doc\.at_xpath|\.xpath\(|\.at_xpath|Nokogiri::XML\.parse)' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 10 --max-count 75 \
     "${src}"
 
@@ -67,7 +67,7 @@ Query::run_parsers() {
     '(JSON\.parse|JSON\.load|JSON\.pretty_generate|JSON\.generate|Yajl::Parser|yajl.*parse)' \
     "${src}" "ruby" 8 75 \
     -n -i '(JSON\.parse|JSON\.load|JSON\.pretty_generate|JSON\.generate|Yajl::Parser|yajl.*parse)' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 8 --max-count 75 \
     "${src}"
 
@@ -77,7 +77,7 @@ Query::run_parsers() {
     '(JSONL\.parse|each_line.*JSON\.parse|foreach.*JSON\.parse|\.readlines.*map.*parse|json_stream)' \
     "${src}" "ruby" 8 75 \
     -n -i '(JSONL\.parse|each_line.*JSON\.parse|foreach.*JSON\.parse|\.readlines.*map.*parse|json_stream)' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 8 --max-count 75 \
     "${src}"
 
@@ -87,7 +87,7 @@ Query::run_parsers() {
     '(File\.read|File\.readlines|IO\.foreach|IO\.read|\.each_line|\.readlines|File\.open.*each)' \
     "${src}" "ruby" 8 75 \
     -n -i '(File\.read|File\.readlines|IO\.foreach|IO\.read|\.each_line|\.readlines|File\.open.*each)' \
-    --type ruby --type markdown \
+    --type ruby --type markdown --type py \
     --context 8 --max-count 75 \
     "${src}"
 
@@ -97,7 +97,7 @@ Query::run_parsers() {
     '(YAML\.load_file|YAML\.safe_load|YAML\.load|YAML\.dump|Psych\.load|Psych\.safe_load|\.to_yaml)' \
     "${src}" "ruby, yaml" 8 75 \
     -n -i '(YAML\.load_file|YAML\.safe_load|YAML\.load|YAML\.dump|Psych\.load|Psych\.safe_load|\.to_yaml)' \
-    --type ruby --type yaml --type markdown \
+    --type ruby --type yaml --type markdown --type py \
     --context 8 --max-count 75 \
     "${src}"
 
