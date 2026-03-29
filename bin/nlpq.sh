@@ -116,16 +116,20 @@ main() {
     export NLPQ_OUTPUT_BASE="${chosen_output}"
     export NLPQ_ANALYSIS_OUTPUT="${chosen_output}/analysis"
 
-    # Prompt for source directory only when extraction is part of the run
+    # Prompt for source directories only when extraction is part of the run
     if [[ "${mode}" == "full" || "${mode}" == "extract" ]]; then
-      Gum::title "Source Directory"
-      local chosen_src
-      chosen_src="$(Gum::input \
-        --value "${HOME}/Notebook" \
-        --placeholder "Directory to scan for NLP patterns...")"
-      [[ -z "${chosen_src}" ]]   && { Gum::warn "No directory provided."; exit 0; }
-      [[ ! -d "${chosen_src}" ]] && { Gum::fail "Not a directory: ${chosen_src}"; exit 1; }
-      src_args+=("$(realpath "${chosen_src}")")
+      Gum::title "Source Directories"
+      local -a chosen_dirs
+      mapfile -t chosen_dirs < <(
+        fd . "${HOME}" -t d -d 2 | Gum::_run filter --no-limit --placeholder "Select source directories..."
+      )
+      if [[ ${#chosen_dirs[@]} -eq 0 ]]; then
+        Gum::fail "No directories selected."
+        exit 1
+      fi
+      for dir in "${chosen_dirs[@]}"; do
+        [[ -d "${dir}" ]] && src_args+=("$(realpath "${dir}")")
+      done
     fi
   fi
 

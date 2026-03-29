@@ -108,10 +108,17 @@ main() {
   fi
 
   if [[ ${#input_paths[@]} -eq 0 ]]; then
-    local chosen_src
-    chosen_src="$(Gum::input --value "${HOME}/Notebook" --placeholder "Source directory...")"
-    [[ ! -d "${chosen_src}" ]] && { Gum::fail "Not a directory: ${chosen_src}"; exit 1; }
-    input_paths+=("$(realpath "${chosen_src}")")
+    local -a chosen_dirs
+    mapfile -t chosen_dirs < <(
+      fd . "${HOME}" -t d -d 2 | Gum::_run filter --no-limit --placeholder "Select source directories..."
+    )
+    if [[ ${#chosen_dirs[@]} -eq 0 ]]; then
+      Gum::fail "No directories selected."
+      exit 1
+    fi
+    for dir in "${chosen_dirs[@]}"; do
+      [[ -d "${dir}" ]] && input_paths+=("$(realpath "${dir}")")
+    done
   fi
 
   # Set up output directory for this session
