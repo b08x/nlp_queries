@@ -178,6 +178,8 @@ Context7 MCP is available to fetch up-to-date documentation with code examples.
 - `/phiresky/ripgrep-all` - ripgrep-all (rga): adapter-based multi-format search over PDFs, Office docs, archives, SQLite, and more. Covers `--rga-adapters`, `--rga-accurate`, caching, and custom adapter config.
 - `/jqlang/jq` - jq command-line JSON processor; filters, `select`, `map`, `with_entries`, pipes, and transformation patterns.
 - `/sharkdp/fd` - fd: fast `find` alternative; flags for type filtering (`-t`), extension (`-e`), depth (`-d`), parallel exec (`-x`/`-X`), and placeholder syntax.
+- `/chmln/sd` - sd: intuitive find-and-replace CLI (modern sed alternative); readable split syntax, capture groups, in-place file editing, and 2-12x faster than sed via memory-mapped I/O.
+- `/theryangeary/choose` - choose: fast `cut`/`awk` alternative for field selection; zero-indexed fields, Python-style slice ranges, negative indexing, and custom regex separators (`-f`).
 
 ## Use Codemap CLI for Codebase Navigation
 
