@@ -12,18 +12,18 @@ Query::run_models() {
 
   Query::_write_raw_chunks \
     "${out}/raw/local_inference" \
-    'localhost|127\.0\.0\.1|local.*model|ollama|lm studio' \
+    'embedding.*model|ollama' \
     "${src}" "py, ruby, json, markdown" 10 '~' \
-    -n -i 'localhost|127\.0\.0\.1|local.*model|ollama|lm studio' \
+    -n -i 'embedding.*model|ollama' \
     --type py --type ruby --type json --type markdown \
     --context 10 \
     "${src}"
 
   Query::_write_raw_chunks \
     "${out}/raw/api_inference" \
-    'api.*key|endpoint|openai|anthropic|together' \
+    'api.*key|endpoint|gemini|anthropic|openrouter|mistral' \
     "${src}" "py, ruby, yaml, markdown" 10 '~' \
-    -n -i 'api.*key|endpoint|openai|anthropic|together' \
+    -n -i 'api.*key|endpoint|gemini|anthropic|openrouter|mistral' \
     --type py --type ruby --type yaml --type markdown \
     --context 10 \
     "${src}"
@@ -31,10 +31,10 @@ Query::run_models() {
   local _ck_root
   while IFS= read -r _ck_root; do
     Query::_run_ck_semantic \
-      "local model inference ollama LM Studio self-hosted LLM configuration" \
+      "model inference ollama self-hosted LLM configuration" \
       "${_ck_root}" >> "${out}/local_inference_semantic.jsonl"
     Query::_run_ck_semantic \
-      "API endpoint configuration OpenAI Anthropic remote model integration" \
+      "API endpoint configuration gemini anthropic openrouter mistral remote model integration" \
       "${_ck_root}" >> "${out}/api_inference_semantic.jsonl"
   done < <(Query::ck_find_roots "${src}")
 }
