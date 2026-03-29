@@ -58,9 +58,22 @@ Query::_write_raw_chunks() {
     -v c="${ctx}" \
     -v m="${maxc}" \
     -v ts="${_ts}" '
+    # fmt_line — strip the source-file prefix from a raw rga output line
+    # (both "file:linenum:content" match lines and "file-linenum-content"
+    # context lines), then normalise the linenum separator to ": ".
+    function fmt_line(raw) {
+      if (sf != "" && substr(raw, 1, length(sf) + 1) == sf ":") {
+        raw = substr(raw, length(sf) + 2)
+      } else if (sf != "" && substr(raw, 1, length(sf) + 1) == sf "-") {
+        raw = substr(raw, length(sf) + 2)
+      }
+      if (match(raw, /^[0-9]+[-:]/))
+        raw = substr(raw, 1, RLENGTH - 1) ": " substr(raw, RLENGTH + 1)
+      return raw
+    }
     # write_chunk — flush accumulated lines to dest/chunk_NNNN.md
-    # fname is a local variable (awk extra-param idiom)
-    function write_chunk(    fname) {
+    # Extra params after the first space are awk local variables (idiom).
+    function write_chunk(    fname, i) {
       if (chunk == "") return
       fname = dest "/chunk_" sprintf("%04d", idx) ".md"
       print "---"                       > fname
@@ -76,28 +89,36 @@ Query::_write_raw_chunks() {
       print ""                          > fname
       print chunk                       > fname
       close(fname)
-      idx++; sf = ""; sl = 0; chunk = ""
+      idx++; sf = ""; sl = 0; chunk = ""; prebuf_n = 0
     }
-    BEGIN { idx = 0; sf = ""; sl = 0; chunk = "" }
+    BEGIN { idx = 0; sf = ""; sl = 0; chunk = ""; prebuf_n = 0 }
     /^--$/ { write_chunk(); next }
     {
-      # Extract source file and line from the first match line (file:line:content).
-      # Context lines use "-" as separator and are skipped here.
+      # First match line in a group — sets sf and sl, then flushes the
+      # pre-context buffer (lines that arrived before sf was known).
       if (sf == "" && $0 ~ /^[^:]+:[0-9]+:/) {
         colon1 = index($0, ":")
         sf    = substr($0, 1, colon1 - 1)
         rest  = substr($0, colon1 + 1)
         colon2 = index(rest, ":")
         sl    = substr(rest, 1, colon2 - 1)
+
+        # Retroactively format buffered pre-context lines now that sf is known,
+        # and append them to chunk in arrival order.
+        for (i = 0; i < prebuf_n; i++) {
+          pline = fmt_line(prebuf[i])
+          chunk = (chunk == "") ? pline : chunk "\n" pline
+        }
+        prebuf_n = 0
       }
-      # Strip the source-file prefix from match lines (file:line:content) and
-      # context lines (file-line-content), retaining only line-number and content.
-      line = $0
-      if (sf != "" && substr(line, 1, length(sf) + 1) == sf ":") {
-        line = substr(line, length(sf) + 2)
-      } else if (sf != "" && substr(line, 1, length(sf) + 1) == sf "-") {
-        line = substr(line, length(sf) + 2)
+
+      # Pre-context: sf not yet known — buffer until the match line arrives.
+      if (sf == "") {
+        prebuf[prebuf_n++] = $0
+        next
       }
+
+      line = fmt_line($0)
       chunk = (chunk == "") ? line : chunk "\n" line
     }
     END { write_chunk() }

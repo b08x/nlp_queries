@@ -76,7 +76,7 @@ _Gum::download() {
   fi
 
   local gum_bin
-  gum_bin="$(find "${tmp_dir}" -type f -executable -name "gum" -print -quit)"
+  gum_bin="$(fd -t x -g 'gum' "${tmp_dir}" | head -1)"
   if [[ -z "${gum_bin}" ]]; then
     echo "Error: gum binary not found in downloaded archive" >&2
     return 1

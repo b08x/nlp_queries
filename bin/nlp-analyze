@@ -42,7 +42,7 @@ _discover_run() {
   local -a runs=()
   while IFS= read -r -d '' run_dir; do
     runs+=("${run_dir}")
-  done < <(find "${EXTRACTION_BASE}" -maxdepth 1 -type d -name "run_*" -print0 2>/dev/null)
+  done < <(fd -t d -d 1 -g 'run_*' --print0 "${EXTRACTION_BASE}" 2>/dev/null)
 
   if [[ ${#runs[@]} -eq 0 ]]; then
     Log::error "No extraction runs found in ${EXTRACTION_BASE}"
@@ -54,7 +54,7 @@ _discover_run() {
   for run in "${runs[@]}"; do
     local run_name source_count
     run_name="$(basename "${run}")"
-    source_count="$(find "${run}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
+    source_count="$(fd -t d --min-depth 1 -d 1 . "${run}" 2>/dev/null | wc -l)"
     Log::info "  • ${run_name} (${source_count} source directories)"
   done
 
@@ -65,9 +65,9 @@ _discover_run() {
   Log::info "Source directories:"
   while IFS= read -r src_dir; do
     local cat_count
-    cat_count="$(find "${selected_run}/${src_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
+    cat_count="$(fd -t d --min-depth 1 -d 1 . "${selected_run}/${src_dir}" 2>/dev/null | wc -l)"
     Log::info "  • ${src_dir} (${cat_count} categories)"
-  done < <(find "${selected_run}" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null | sort)
+  done < <(fd -t d --min-depth 1 -d 1 --format '{/}' . "${selected_run}" 2>/dev/null | sort)
 
   # Return the path via stdout; all other output above uses stderr via Log::*
   printf '%s' "${selected_run}"
@@ -87,7 +87,7 @@ _analyze_inventory() {
   fi
 
   local src_count
-  src_count="$(find "${run_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
+  src_count="$(fd -t d --min-depth 1 -d 1 . "${run_dir}" 2>/dev/null | wc -l)"
   Log::info "Found ${src_count} source directories in: $(basename "${run_dir}")"
 
   if [[ "${src_count}" -eq 0 ]]; then
@@ -118,10 +118,10 @@ _analyze_inventory() {
         if [[ -d "${cat_path}" ]]; then
           has_categories=true
           local file_count jsonl_count raw_count size
-          file_count="$(find "${cat_path}" -type f 2>/dev/null | wc -l)"
-          jsonl_count="$(find "${cat_path}" -type f -name "*.jsonl" 2>/dev/null | wc -l)"
-          raw_count="$(find "${cat_path}"  -type f -name "chunk*.md" 2>/dev/null | wc -l)"
-          size="$(du -sh "${cat_path}" 2>/dev/null | awk '{print $1}')"
+          file_count="$(fd -t f . "${cat_path}" 2>/dev/null | wc -l)"
+          jsonl_count="$(fd -t f -e jsonl . "${cat_path}" 2>/dev/null | wc -l)"
+          raw_count="$(fd -t f -g 'chunk*.md' "${cat_path}" 2>/dev/null | wc -l)"
+          size="$(du -sh "${cat_path}" 2>/dev/null | choose 0)"
 
           if [[ "${file_count}" -gt 0 ]]; then
             printf "%-20s Files: %2d (jsonl: %2d, raw: %2d)   Size: %s\n" \
@@ -134,17 +134,17 @@ _analyze_inventory() {
         echo "*No category directories found*"
         echo ""
         echo "Directory structure:"
-        find "${src_dir}" -maxdepth 2 -type d -exec basename {} \; | sed 's/^/  - /'
+        fd -t d -d 2 --format '{/}' . "${src_dir}" | sd '(?m)^' '  - '
       fi
 
       echo ""
-    done < <(find "${run_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
+    done < <(fd -t d --min-depth 1 -d 1 . "${run_dir}" 2>/dev/null | sort)
 
     if [[ "${found_sources}" == false ]]; then
       echo "*No source directories found in extraction run*"
       echo ""
       echo "Run directory structure:"
-      find "${run_dir}" -maxdepth 2 | sed 's/^/  /'
+      fd -d 2 . "${run_dir}" | sd '(?m)^' '  '
       echo ""
     fi
 
@@ -152,10 +152,10 @@ _analyze_inventory() {
     echo ""
 
     local total_files total_jsonl total_raw total_size
-    total_files="$(find "${run_dir}" -type f \( -name "*.jsonl" -o -name "chunk*.md" \) 2>/dev/null | wc -l)"
-    total_jsonl="$(find "${run_dir}" -type f -name "*.jsonl" 2>/dev/null | wc -l)"
-    total_raw="$(find "${run_dir}"  -type f -name "chunk*.md" 2>/dev/null | wc -l)"
-    total_size="$(du -sh "${run_dir}" 2>/dev/null | awk '{print $1}')"
+    total_files="$(fd -t f '(\.jsonl$|chunk.*\.md$)' "${run_dir}" 2>/dev/null | wc -l)"
+    total_jsonl="$(fd -t f -e jsonl . "${run_dir}" 2>/dev/null | wc -l)"
+    total_raw="$(fd -t f -g 'chunk*.md' "${run_dir}" 2>/dev/null | wc -l)"
+    total_size="$(du -sh "${run_dir}" 2>/dev/null | choose 0)"
 
     echo "- Total Files: ${total_files}"
     echo "- Structured Data (JSONL): ${total_jsonl}"
@@ -218,8 +218,7 @@ _perform_sampling() {
         rm -f "${output_file}"
       fi
 
-    done < <(find "${run_dir}"/*/"${category}" -type f \
-               \( -name "*.jsonl" -o -name "chunk*.md" \) 2>/dev/null)
+    done < <(fd -t f '(\.jsonl$|chunk.*\.md$)' "${run_dir}"/*/"${category}" 2>/dev/null)
   done
 
   Log::success "Samples saved to: ${sample_dir}"
@@ -244,7 +243,7 @@ _extract_patterns() {
     rg -N --no-heading '^\s*(def|class|function)\s+\w+' "${sample_dir}" \
       --max-count 30 2>/dev/null | \
       sort -u | \
-      sed 's/^/  - /' || echo "  (none found)"
+      sd '(?m)^' '  - ' || echo "  (none found)"
 
     echo ""
     echo "## Common Patterns"
@@ -284,7 +283,7 @@ _extract_patterns() {
     rg -oN '\b(top_k|max_tokens|chunk_size|overlap|threshold|temperature)\s*[:=]\s*\d+' \
       "${sample_dir}/config" 2>/dev/null | \
       sort | uniq -c | sort -rn | head -8 | \
-      sed 's/^/  /' || echo "  (none found)"
+      sd '(?m)^' '  ' || echo "  (none found)"
 
   } | tee "${pattern_file}"
 
@@ -375,7 +374,7 @@ _formulate_strategies() {
     local total_methods unique_patterns total_source_files
     total_methods="$(grep -c '^  - ' "${pattern_file}" 2>/dev/null || echo 0)"
     unique_patterns="$(rg -N --count '\b(chunk|embed|search|parse)' "${pattern_file}" 2>/dev/null | wc -l)"
-    total_source_files="$(grep 'Total Files' "${inventory_file}" | awk '{print $3}')"
+    total_source_files="$(grep 'Total Files' "${inventory_file}" | choose 2)"
 
     echo "- **Methods Discovered**: ${total_methods} signatures"
     echo "- **Pattern Categories**: ${unique_patterns} distinct types"

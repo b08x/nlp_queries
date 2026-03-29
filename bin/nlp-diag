@@ -17,7 +17,7 @@ _diag_run() {
   local run_dir="$1"
   local run_name src_count
   run_name="$(basename "${run_dir}")"
-  src_count="$(find "${run_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
+  src_count="$(fd -t d --min-depth 1 -d 1 . "${run_dir}" 2>/dev/null | wc -l)"
 
   printf '━━━ %s ━━━\n' "${run_name}"
   printf '  Source Directories: %d\n' "${src_count}"
@@ -25,7 +25,7 @@ _diag_run() {
   if [[ "${src_count}" -eq 0 ]]; then
     printf '  ⚠ No source directories found\n\n'
     printf '  Directory contents:\n'
-    ls -lah "${run_dir}" | sed 's/^/    /'
+    ls -lah "${run_dir}" | sd '(?m)^' '    '
     printf '\n'
     return
   fi
@@ -33,9 +33,8 @@ _diag_run() {
   while IFS= read -r src_dir; do
     local src_name cat_count file_count
     src_name="$(basename "${src_dir}")"
-    cat_count="$(find "${src_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
-    file_count="$(find "${src_dir}" -type f \
-                    \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
+    cat_count="$(fd -t d --min-depth 1 -d 1 . "${src_dir}" 2>/dev/null | wc -l)"
+    file_count="$(fd -t f '(\.jsonl$|_raw\.txt$)' . "${src_dir}" 2>/dev/null | wc -l)"
 
     printf '  → %s\n' "${src_name}"
     printf '     Categories: %d | Files: %d\n' "${cat_count}" "${file_count}"
@@ -45,7 +44,7 @@ _diag_run() {
         local cat_path="${src_dir}/${category}"
         if [[ -d "${cat_path}" ]]; then
           local cat_files
-          cat_files="$(find "${cat_path}" -type f 2>/dev/null | wc -l)"
+          cat_files="$(fd -t f . "${cat_path}" 2>/dev/null | wc -l)"
           if [[ "${cat_files}" -gt 0 ]]; then
             printf '       • %s: %d files\n' "${category}" "${cat_files}"
           fi
@@ -54,16 +53,15 @@ _diag_run() {
     else
       printf '       ⚠ No extraction files found\n'
       printf '       Directory structure:\n'
-      find "${src_dir}" -maxdepth 2 -type d -exec basename {} \; | sed 's/^/         - /'
+      fd -t d -d 2 --format '{/}' . "${src_dir}" | sd '(?m)^' '         - '
     fi
     printf '\n'
 
-  done < <(find "${run_dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
+  done < <(fd -t d --min-depth 1 -d 1 . "${run_dir}" 2>/dev/null | sort)
 
   local total_files total_size
-  total_files="$(find "${run_dir}" -type f \
-                   \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
-  total_size="$(du -sh "${run_dir}" 2>/dev/null | awk '{print $1}')"
+  total_files="$(fd -t f '(\.jsonl$|_raw\.txt$)' . "${run_dir}" 2>/dev/null | wc -l)"
+  total_size="$(du -sh "${run_dir}" 2>/dev/null | choose 0)"
   printf '  Summary: %d files | %s total\n\n' "${total_files}" "${total_size}"
 }
 
@@ -85,7 +83,7 @@ main() {
   local -a runs=()
   while IFS= read -r -d '' run_dir; do
     runs+=("${run_dir}")
-  done < <(find "${OUTPUT_DIR}" -maxdepth 1 -type d -name "run_*" -print0 | sort -rz)
+  done < <(fd -t d -d 1 -g 'run_*' --print0 "${OUTPUT_DIR}" 2>/dev/null | sort -rz)
 
   if [[ ${#runs[@]} -eq 0 ]]; then
     printf '  No extraction runs found\n'
@@ -103,8 +101,7 @@ main() {
 
   local latest_run latest_files
   latest_run="${runs[0]}"
-  latest_files="$(find "${latest_run}" -type f \
-                    \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
+  latest_files="$(fd -t f '(\.jsonl$|_raw\.txt$)' . "${latest_run}" 2>/dev/null | wc -l)"
 
   if [[ "${latest_files}" -eq 0 ]]; then
     printf '  ⚠ Latest run contains no extraction files\n'
