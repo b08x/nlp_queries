@@ -90,7 +90,15 @@ Query::_write_raw_chunks() {
         colon2 = index(rest, ":")
         sl    = substr(rest, 1, colon2 - 1)
       }
-      chunk = (chunk == "") ? $0 : chunk "\n" $0
+      # Strip the source-file prefix from match lines (file:line:content) and
+      # context lines (file-line-content), retaining only line-number and content.
+      line = $0
+      if (sf != "" && substr(line, 1, length(sf) + 1) == sf ":") {
+        line = substr(line, length(sf) + 2)
+      } else if (sf != "" && substr(line, 1, length(sf) + 1) == sf "-") {
+        line = substr(line, length(sf) + 2)
+      }
+      chunk = (chunk == "") ? line : chunk "\n" line
     }
     END { write_chunk() }
   '

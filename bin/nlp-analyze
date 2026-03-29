@@ -120,7 +120,7 @@ _analyze_inventory() {
           local file_count jsonl_count raw_count size
           file_count="$(find "${cat_path}" -type f 2>/dev/null | wc -l)"
           jsonl_count="$(find "${cat_path}" -type f -name "*.jsonl" 2>/dev/null | wc -l)"
-          raw_count="$(find "${cat_path}"  -type f -name "*_raw.txt" 2>/dev/null | wc -l)"
+          raw_count="$(find "${cat_path}"  -type f -name "chunk*.md" 2>/dev/null | wc -l)"
           size="$(du -sh "${cat_path}" 2>/dev/null | awk '{print $1}')"
 
           if [[ "${file_count}" -gt 0 ]]; then
@@ -152,9 +152,9 @@ _analyze_inventory() {
     echo ""
 
     local total_files total_jsonl total_raw total_size
-    total_files="$(find "${run_dir}" -type f \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null | wc -l)"
+    total_files="$(find "${run_dir}" -type f \( -name "*.jsonl" -o -name "chunk*.md" \) 2>/dev/null | wc -l)"
     total_jsonl="$(find "${run_dir}" -type f -name "*.jsonl" 2>/dev/null | wc -l)"
-    total_raw="$(find "${run_dir}"  -type f -name "*_raw.txt" 2>/dev/null | wc -l)"
+    total_raw="$(find "${run_dir}"  -type f -name "chunk*.md" 2>/dev/null | wc -l)"
     total_size="$(du -sh "${run_dir}" 2>/dev/null | awk '{print $1}')"
 
     echo "- Total Files: ${total_files}"
@@ -219,7 +219,7 @@ _perform_sampling() {
       fi
 
     done < <(find "${run_dir}"/*/"${category}" -type f \
-               \( -name "*.jsonl" -o -name "*_raw.txt" \) 2>/dev/null)
+               \( -name "*.jsonl" -o -name "chunk*.md" \) 2>/dev/null)
   done
 
   Log::success "Samples saved to: ${sample_dir}"

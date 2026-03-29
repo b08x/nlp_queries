@@ -29,9 +29,9 @@ Query::run_databases() {
   # Raw chunks: schema blocks, dataset/table definitions, column declarations
   Query::_write_raw_chunks \
     "${out}/raw/schema_definitions" \
-    'schema|dataset|table.*(define|create|column)' \
+    'schema|sfl|dataset|table.*(define|create|column)' \
     "${src}" "ruby, py, sql, markdown" 10 75 \
-    -n -i 'schema|dataset|table.*(define|create|column)' \
+    -n -i 'schema|sfl|dataset|table.*(define|create|column)' \
     --type ruby --type py --type sql --type markdown \
     --context 10 --max-count 75 \
     "${src}"
@@ -39,9 +39,9 @@ Query::run_databases() {
   # Raw chunks: migration files and schema change patterns
   Query::_write_raw_chunks \
     "${out}/raw/migrations" \
-    'migration|migrate|create_table|add_column|alter_table' \
+    'migration|migrate|sfl|create_table|add_column|alter_table' \
     "${src}" "ruby, py, sql, markdown" 10 50 \
-    -n -i 'migration|migrate|create_table|add_column|alter_table' \
+    -n -i 'migration|migrate|sfl|create_table|add_column|alter_table' \
     --type ruby --type py --type sql --type markdown \
     --context 10 --max-count 50 \
     "${src}"
@@ -49,9 +49,9 @@ Query::run_databases() {
   # Raw chunks: Redis key/value, sorted set, hash, pipeline, and expiry usage
   Query::_write_raw_chunks \
     "${out}/raw/redis" \
-    'redis|hset|hget|zadd|pipeline|expire' \
+    'redis|hset|hget|zadd|pipeline|expire|reference|collection|list|set' \
     "${src}" "ruby, py, json, markdown" 10 50 \
-    -n -i 'redis|hset|hget|zadd|pipeline|expire' \
+    -n -i 'redis|hset|hget|zadd|pipeline|expire|reference|collection|list|set' \
     --type ruby --type py --type json --type markdown \
     --context 10 --max-count 50 \
     "${src}"
@@ -59,13 +59,13 @@ Query::run_databases() {
   local _ck_root
   while IFS= read -r _ck_root; do
     Query::_run_ck_semantic \
-      "database schema model ORM Sequel Ohm table definition column association" \
+      "database schema model ORM Sequel Ohm table definition column association attribute sfl systemic-functional-linguistics" \
       "${_ck_root}" >> "${out}/orm_models_semantic.jsonl"
     Query::_run_ck_semantic \
-      "database migration schema change create table alter column index" \
+      "database migration schema change create table alter column index sfl systemic-functional-linguistics" \
       "${_ck_root}" >> "${out}/migrations_semantic.jsonl"
     Query::_run_ck_semantic \
-      "Redis cache key-value pipeline expiry sorted set hash counter pub-sub" \
+      "Redis cache key-value pipeline expiry sorted set hash counter pub-sub collection reference set list sfl systemic-functional-linguistics" \
       "${_ck_root}" >> "${out}/redis_semantic.jsonl"
   done < <(Query::ck_find_roots "${src}")
 }
