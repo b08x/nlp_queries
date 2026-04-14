@@ -121,7 +121,7 @@ main() {
       Gum::title "Source Directories"
       local -a chosen_dirs
       mapfile -t chosen_dirs < <(
-        fd . "${HOME}" -t d -d 2 | Gum::_run filter --no-limit --placeholder "Select source directories..."
+        fd . "${HOME}" -t d -d 3 | Gum::_run filter --no-limit --placeholder "Select source directories..."
       )
       if [[ ${#chosen_dirs[@]} -eq 0 ]]; then
         Gum::fail "No directories selected."
