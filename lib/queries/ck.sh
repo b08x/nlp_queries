@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
+# shellcheck source=lib/config.sh
 # lib/queries/ck.sh — ck semantic search helpers
 #
 # Provides: Query::ck_find_roots  Query::safe_ck  Query::_run_ck_semantic

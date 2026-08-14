@@ -40,7 +40,7 @@ _diag_run() {
     printf '     Categories: %d | Files: %d\n' "${cat_count}" "${file_count}"
 
     if [[ "${file_count}" -gt 0 ]]; then
-      for category in chunking embedding preprocessing parsers pipelines models search config graphs multimodal; do
+      for category in chunking embedding preprocessing parsers pipelines models search config graphs multimodal databases; do
         local cat_path="${src_dir}/${category}"
         if [[ -d "${cat_path}" ]]; then
           local cat_files

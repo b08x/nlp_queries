@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
+# shellcheck source=lib/config.sh
 # bin/nlp-extract.sh — Interactive NLP strategy extraction
 #
 # Usage:

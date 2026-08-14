@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
+# shellcheck source=lib/config.sh
 # bin/nlp-analyze.sh — Multi-stage NLP strategy analysis pipeline
 #
 # Processes the most recent extraction run through 5 stages:
@@ -113,7 +114,7 @@ _analyze_inventory() {
       echo ""
 
       local has_categories=false
-      for category in chunking embedding preprocessing parsers pipelines models search config graphs multimodal; do
+      for category in chunking embedding preprocessing parsers pipelines models search config graphs multimodal databases; do
         local cat_path="${src_dir}/${category}"
         if [[ -d "${cat_path}" ]]; then
           has_categories=true
@@ -185,7 +186,7 @@ _perform_sampling() {
   Log::stage "Stage 3: Stratified Sampling"
   mkdir -p "${sample_dir}"
 
-  local -a categories=(chunking embedding preprocessing parsers pipelines models search config graphs multimodal)
+  local -a categories=(chunking embedding preprocessing parsers pipelines models search config graphs multimodal databases)
 
   for category in "${categories[@]}"; do
     local cat_sample_dir="${sample_dir}/${category}"

@@ -1,0 +1,8 @@
+# Shellcheck configuration for nlp_queries
+# Follow `source`/`."file"` directives so definitions from lib/*.sh are visible
+# when analyzing consumers, eliminating spurious SC2034 "unused" warnings on
+# shared constants. Note: lib files are sourced via variable paths ($LIB_DIR),
+# which Shellcheck cannot resolve statically; add per-file
+#   # shellcheck source=lib/config.sh
+# directives in consumers if SC2034 persists for a specific constant.
+external-sources=true

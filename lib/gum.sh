@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
+# shellcheck source=lib/config.sh
 # lib/gum.sh — Namespaced terminal UI wrappers using Charm's gum
 #
 # Usage:
