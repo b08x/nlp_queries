@@ -3,7 +3,7 @@
 # lib/queries/search.sh — Query::run_search
 #
 # Searches for hybrid search, reciprocal rank fusion, and retrieval patterns.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_search() {
   local src="$1"
@@ -19,10 +19,10 @@ Query::run_search() {
     --context 10 --max-count 50 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "hybrid search reciprocal rank fusion retrieval augmented dense sparse" \
-      "${_ck_root}" >> "${out}/hybrid_patterns_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/hybrid_patterns_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

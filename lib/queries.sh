@@ -17,7 +17,7 @@ _queries_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/queries"
 
 for _queries_file in \
   "${_queries_dir}/helpers.sh" \
-  "${_queries_dir}/ck.sh" \
+  "${_queries_dir}/qmd.sh" \
   "${_queries_dir}/chunking.sh" \
   "${_queries_dir}/embedding.sh" \
   "${_queries_dir}/preprocessing.sh" \

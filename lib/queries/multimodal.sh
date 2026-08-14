@@ -3,7 +3,7 @@
 # lib/queries/multimodal.sh — Query::run_multimodal
 #
 # Searches for vision/language model and image captioning patterns.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_multimodal() {
   local src="$1"
@@ -19,10 +19,10 @@ Query::run_multimodal() {
     --context 10 --max-count 50 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "vision language model image captioning multimodal embeddings CLIP BLIP" \
-      "${_ck_root}" >> "${out}/vision_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/vision_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

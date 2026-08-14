@@ -3,7 +3,7 @@
 # lib/queries/preprocessing.sh — Query::run_preprocessing
 #
 # Searches for text cleaning/normalization methods and tokenizer usage.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_preprocessing() {
   local src="$1"
@@ -28,13 +28,13 @@ Query::run_preprocessing() {
     --context 10 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "text cleaning normalization preprocessing pipeline sanitization" \
-      "${_ck_root}" >> "${out}/methods_semantic.jsonl"
-    Query::_run_ck_semantic \
+      "${_collection}" >> "${out}/methods_semantic.jsonl"
+    Query::_run_qmd_semantic \
       "tokenizer BPE segmenter NLP tokenization lingua" \
-      "${_ck_root}" >> "${out}/tokenizers_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/tokenizers_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

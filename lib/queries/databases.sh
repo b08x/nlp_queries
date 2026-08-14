@@ -5,7 +5,7 @@
 # Searches for ORM model definitions, schema/migration patterns, SQL usage,
 # and Redis access patterns.
 # Keywords: model, schema, Ohm, Sequel, migrations, sql, redis
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_databases() {
   local src="$1"
@@ -56,16 +56,16 @@ Query::run_databases() {
     --context 10 --max-count 50 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "database schema model ORM Sequel Ohm table definition column association attribute sfl systemic-functional-linguistics" \
-      "${_ck_root}" >> "${out}/orm_models_semantic.jsonl"
-    Query::_run_ck_semantic \
+      "${_collection}" >> "${out}/orm_models_semantic.jsonl"
+    Query::_run_qmd_semantic \
       "database migration schema change create table alter column index sfl systemic-functional-linguistics" \
-      "${_ck_root}" >> "${out}/migrations_semantic.jsonl"
-    Query::_run_ck_semantic \
+      "${_collection}" >> "${out}/migrations_semantic.jsonl"
+    Query::_run_qmd_semantic \
       "Redis cache key-value pipeline expiry sorted set hash counter pub-sub collection reference set list sfl systemic-functional-linguistics" \
-      "${_ck_root}" >> "${out}/redis_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/redis_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

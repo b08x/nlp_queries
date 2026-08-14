@@ -29,7 +29,7 @@ Each library is sourced by bin scripts; none have side effects on source.
 Each category lives in its own file. Shared internals are in `helpers.sh`:
 
 - **`helpers.sh`** — `Query::_ensure_dir`, `Query::safe_rga` (rga wrapper that treats exit 1 as success), and `Query::_write_raw_chunks` (splits rga context output into per-match `chunk_NNNN.md` files with YAML frontmatter).
-- **`chunking.sh`, `embedding.sh`, `preprocessing.sh`, `parsers.sh`, `pipelines.sh`, `models.sh`, `search.sh`, `configs.sh`, `graphs.sh`, `multimodal.sh`, `databases.sh`, `ck.sh`** — One `Query::run_<name>` function each.
+- **`chunking.sh`, `embedding.sh`, `preprocessing.sh`, `parsers.sh`, `pipelines.sh`, `models.sh`, `search.sh`, `configs.sh`, `graphs.sh`, `multimodal.sh`, `databases.sh`, `qmd.sh`** — One `Query::run_<name>` function each.
 
 ### `Query::_write_raw_chunks`
 
@@ -218,7 +218,7 @@ Context7 MCP is available to fetch up-to-date documentation with code examples.
 
 **Recommended library IDs:**
 
-- `/beaconbay/ck` - Semantic code search tool that finds code by meaning, not just keywords. Extends grep functionality to understand conceptual searches and integrate with AI agents via MCP.
+- `/tobi/qmd` - Semantic search tool for markdown knowledge bases, notes, docs, and wikis. Combines BM25 full-text search, vector semantic search, and LLM re-ranking locally. Ideal for agentic flows.
 - `/websites/help_obsidian_md_cli` - Obsidian CLI for controlling Obsidian from the terminal; vault search, note creation, daily notes, and plugin management.
 - `/burntsushi/ripgrep` - ripgrep (rg): fast line-oriented regex search tool; type filtering (`-t`/`-T`), glob patterns (`-g`), context lines (`-C`), JSON output, and gitignore-aware recursive search.
 - `/phiresky/ripgrep-all` - ripgrep-all (rga): adapter-based multi-format search over PDFs, Office docs, archives, SQLite, and more. Covers `--rga-adapters`, `--rga-accurate`, caching, and custom adapter config.

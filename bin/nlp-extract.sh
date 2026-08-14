@@ -47,10 +47,10 @@ _check_dependencies() {
     exit 1
   fi
 
-  if ! command -v ck &>/dev/null; then
-    Gum::warn "ck not found — semantic search enhancement disabled"
-    Gum::warn "  Directories with a .ck index won't produce *_semantic.jsonl files"
-    Gum::warn "  Install: cargo install ck  (https://github.com/beaconbay/ck)"
+  if ! command -v qmd &>/dev/null; then
+    Gum::warn "qmd not found — semantic search enhancement disabled"
+    Gum::warn "  Directories with a qmd index won't produce *_semantic.jsonl files"
+    Gum::warn "  Install: bun install -g https://github.com/tobi/qmd  (or npm install -g @tobilu/qmd)"
   fi
 }
 

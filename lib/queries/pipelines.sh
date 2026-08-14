@@ -3,7 +3,7 @@
 # lib/queries/pipelines.sh — Query::run_pipelines
 #
 # Searches for RAG pipeline class/function definitions and architectures.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_pipelines() {
   local src="$1"
@@ -19,10 +19,10 @@ Query::run_pipelines() {
     --context 20 --max-count 50 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "RAG pipeline architecture stages ingestion retrieval augmented generation" \
-      "${_ck_root}" >> "${out}/architectures_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/architectures_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

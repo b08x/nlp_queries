@@ -3,7 +3,7 @@
 # lib/queries/configs.sh — Query::run_configs
 #
 # Searches for context window sizes and token limit configuration parameters.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_configs() {
   local src="$1"
@@ -19,10 +19,10 @@ Query::run_configs() {
     --context 10 --max-count 75 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "context window size token limit configuration parameters settings" \
-      "${_ck_root}" >> "${out}/context_windows_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/context_windows_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

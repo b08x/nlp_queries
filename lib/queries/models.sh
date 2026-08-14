@@ -3,7 +3,7 @@
 # lib/queries/models.sh — Query::run_models
 #
 # Searches for local inference (Ollama, LM Studio) and remote API configurations.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_models() {
   local src="$1"
@@ -28,13 +28,13 @@ Query::run_models() {
     --context 10 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "model inference ollama self-hosted LLM configuration" \
-      "${_ck_root}" >> "${out}/local_inference_semantic.jsonl"
-    Query::_run_ck_semantic \
+      "${_collection}" >> "${out}/local_inference_semantic.jsonl"
+    Query::_run_qmd_semantic \
       "API endpoint configuration gemini anthropic openrouter mistral remote model integration" \
-      "${_ck_root}" >> "${out}/api_inference_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/api_inference_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

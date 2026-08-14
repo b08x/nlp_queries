@@ -212,7 +212,7 @@ lib/
     ├── graphs.sh
     ├── multimodal.sh
     ├── databases.sh
-    └── ck.sh             # Semantic search via ck (optional)
+    └── qmd.sh             # Semantic search via qmd (optional)
 ```
 
 ### Library loading

@@ -4,7 +4,7 @@
 #
 # Searches for document parsing and section-splitting patterns across formats:
 # markdown, pdf, docx, html, xml, json, jsonl, txt, yml.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_parsers() {
   local src="$1"
@@ -102,10 +102,10 @@ Query::run_parsers() {
     "${src}"
 
   # ── Semantic search (all document formats) ────────────────────────────
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "ruby document parsing nokogiri docling pdf-reader docx json yaml psych file io readlines css xpath" \
-      "${_ck_root}" >> "${out}/document_parsers_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/document_parsers_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

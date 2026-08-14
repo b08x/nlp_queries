@@ -3,7 +3,7 @@
 # lib/queries/chunking.sh — Query::run_chunking
 #
 # Searches for text chunking strategies, token window configs, and hierarchical
-# splitting patterns. Depends on: helpers.sh  ck.sh
+# splitting patterns. Depends on: helpers.sh  qmd.sh
 
 Query::run_chunking() {
   local src="$1"
@@ -45,13 +45,13 @@ Query::run_chunking() {
     --context 10 --max-count 75 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "text chunking strategies recursive splitting semantic segmentation" \
-      "${_ck_root}" >> "${out}/strategies_semantic.jsonl"
-    Query::_run_ck_semantic \
+      "${_collection}" >> "${out}/strategies_semantic.jsonl"
+    Query::_run_qmd_semantic \
       "token window size maximum token limits configuration" \
-      "${_ck_root}" >> "${out}/token_configs_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/token_configs_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }

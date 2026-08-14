@@ -3,7 +3,7 @@
 # lib/queries/embedding.sh — Query::run_embedding
 #
 # Searches for embedding model configs, vector dimensions, and vector DB usage.
-# Depends on: helpers.sh  ck.sh
+# Depends on: helpers.sh  qmd.sh
 
 Query::run_embedding() {
   local src="$1"
@@ -53,13 +53,13 @@ Query::run_embedding() {
     --context 10 --max-count 50 \
     "${src}"
 
-  local _ck_root
-  while IFS= read -r _ck_root; do
-    Query::_run_ck_semantic \
+  local _collection
+  while IFS= read -r _collection; do
+    Query::_run_qmd_semantic \
       "embedding model configuration dimensions vector similarity" \
-      "${_ck_root}" >> "${out}/embedding_configs_semantic.jsonl"
-    Query::_run_ck_semantic \
+      "${_collection}" >> "${out}/embedding_configs_semantic.jsonl"
+    Query::_run_qmd_semantic \
       "vector database pgvector similarity search index embeddings" \
-      "${_ck_root}" >> "${out}/vector_dbs_semantic.jsonl"
-  done < <(Query::ck_find_roots "${src}")
+      "${_collection}" >> "${out}/vector_dbs_semantic.jsonl"
+  done < <(Query::qmd_find_collections "${src}")
 }
