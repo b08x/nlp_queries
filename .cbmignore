@@ -1,0 +1,6 @@
+.claude
+logs/
+.graphifyignore
+.gitignore
+.ckignore
+graphify-out/

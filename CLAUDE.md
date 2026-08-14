@@ -11,9 +11,9 @@ Bash-based CLI for discovering and cataloging NLP/ML implementation patterns acr
 ### Entry Points (`bin/`)
 
 - **`bin/nlpq.sh`** — Primary entrypoint. Prompts for pipeline mode (Full / Extract / Analyze / Diagnose), exports `NLPQ_OUTPUT_BASE` and `NLPQ_ANALYSIS_OUTPUT`, then delegates to the stage scripts.
-- **`bin/nlp-extract`** — Interactive extraction. Prompts for source directories and strategy categories, runs `Query::run_*` functions under `Gum::spin`, writes timestamped results to `output/run_TIMESTAMP/`.
-- **`bin/nlp-analyze`** — Non-interactive 5-stage pipeline: discovery → inventory → sampling → pattern extraction → strategy formulation. Operates on the most recent `output/run_*` directory.
-- **`bin/nlp-diag`** — Read-only diagnostic. Scans `output/` runs and reports file counts per category.
+- **`bin/nlp-extract.sh`** — Interactive extraction. Prompts for source directories and strategy categories, runs `Query::run_*` functions under `Gum::spin`, writes timestamped results to `output/run_TIMESTAMP/`.
+- **`bin/nlp-analyze.sh`** — Non-interactive 5-stage pipeline: discovery → inventory → sampling → pattern extraction → strategy formulation. Operates on the most recent `output/run_*` directory.
+- **`bin/nlp-diag.sh`** — Read-only diagnostic. Scans `output/` runs and reports file counts per category.
 
 ### Shared Libraries (`lib/`)
 
@@ -66,7 +66,7 @@ Gum::install_traps
 
 ### Subshell Execution
 
-`bin/nlp-extract` runs each query category inside a `bash -c` subshell under `Gum::spin`. The subshell re-sources `lib/queries.sh` (exported `LIB_DIR` is how it finds the file) and calls the function by name:
+`bin/nlp-extract.sh` runs each query category inside a `bash -c` subshell under `Gum::spin`. The subshell re-sources `lib/queries.sh` (exported `LIB_DIR` is how it finds the file) and calls the function by name:
 
 ```bash
 export LIB_DIR
@@ -85,16 +85,16 @@ Bash functions with `::` in their names are valid and survive this pattern.
 bin/nlpq.sh
 
 # Multi-source extraction
-bin/nlp-extract ~/repo1 ~/repo2 ~/repo3
+bin/nlp-extract.sh ~/repo1 ~/repo2 ~/repo3
 
 # Analysis pipeline (processes most recent output/run_*)
-bin/nlp-analyze
+bin/nlp-analyze.sh
 
 # Diagnostic validation
-bin/nlp-diag
+bin/nlp-diag.sh
 
 # Override gum binary location
-GUM=/usr/bin/gum bin/nlp-extract
+GUM=/usr/bin/gum bin/nlp-extract.sh
 
 # Custom output directory
 NLPQ_OUTPUT_BASE=~/my_results bin/nlpq.sh
@@ -151,7 +151,7 @@ Query::run_custom() {
 }
 ```
 
-2. **Register in `bin/nlp-extract`** — add to the `options` array and the `case` dispatch:
+2. **Register in `bin/nlp-extract.sh`** — add to the `options` array and the `case` dispatch:
 
 ```bash
 *"11. Custom"*) _run_category "Custom" "Query::run_custom" "${src_dir}" "${src_output}" || true ;;

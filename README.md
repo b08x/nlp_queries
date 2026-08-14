@@ -93,10 +93,10 @@ NLPQ_OUTPUT_BASE=~/my_results bin/nlpq.sh
 ### Individual stages
 
 ```bash
-bin/nlp-extract                     # Interactive extraction
-bin/nlp-extract ~/repo1 ~/repo2     # Extraction, multiple sources
-bin/nlp-diag                        # Validate most-recent extraction run
-bin/nlp-analyze                     # Analysis on most-recent extraction run
+bin/nlp-extract.sh                     # Interactive extraction
+bin/nlp-extract.sh ~/repo1 ~/repo2     # Extraction, multiple sources
+bin/nlp-diag.sh                        # Validate most-recent extraction run
+bin/nlp-analyze.sh                     # Analysis on most-recent extraction run
 ```
 
 ### Pipeline modes
@@ -104,9 +104,9 @@ bin/nlp-analyze                     # Analysis on most-recent extraction run
 | Mode | Command | Description |
 |------|---------|-------------|
 | Full Pipeline | `bin/nlpq.sh` | Extract → diagnose → analyze |
-| Extract Only | `bin/nlp-extract` | Run query categories, write output |
-| Analyze Only | `bin/nlp-analyze` | Process existing extraction run |
-| Diagnose Only | `bin/nlp-diag` | Validate run structure and file counts |
+| Extract Only | `bin/nlp-extract.sh` | Run query categories, write output |
+| Analyze Only | `bin/nlp-analyze.sh` | Process existing extraction run |
+| Diagnose Only | `bin/nlp-diag.sh` | Validate run structure and file counts |
 
 ---
 
@@ -190,9 +190,9 @@ generated_at: "2026-03-28T20:19:30Z"
 ```
 bin/
 ├── nlpq.sh        # Pipeline orchestrator — mode selection, env export
-├── nlp-extract    # Extraction: category selection → Query::run_* → output/
-├── nlp-analyze    # Analysis: 5-stage pipeline → analysis/
-└── nlp-diag       # Diagnostics: run structure validation, file counts
+├── nlp-extract.sh    # Extraction: category selection → Query::run_* → output/
+├── nlp-analyze.sh    # Analysis: 5-stage pipeline → analysis/
+└── nlp-diag.sh       # Diagnostics: run structure validation, file counts
 
 lib/
 ├── config.sh      # Constants: GUM_VERSION, color codes, sampling params
@@ -230,7 +230,7 @@ Gum::install_traps
 
 ### Subshell execution
 
-`bin/nlp-extract` runs each category inside a `bash -c` subshell under `Gum::spin`. The subshell re-sources `lib/queries.sh` via exported `LIB_DIR`:
+`bin/nlp-extract.sh` runs each category inside a `bash -c` subshell under `Gum::spin`. The subshell re-sources `lib/queries.sh` via exported `LIB_DIR`:
 
 ```bash
 export LIB_DIR
@@ -281,7 +281,7 @@ Query::run_custom() {
 }
 ```
 
-2. **Register in `bin/nlp-extract`** — add to the `options` array and the `case` dispatch:
+2. **Register in `bin/nlp-extract.sh`** — add to the `options` array and the `case` dispatch:
 
 ```bash
 *"11. Custom"*) _run_category "Custom" "Query::run_custom" "${src_dir}" "${src_output}" || true ;;
@@ -325,14 +325,14 @@ cargo install ripgrep-all
 rga 'def ' "$SOURCE_DIR" --type py
 
 # Run diagnostics on the extraction run
-bin/nlp-diag
+bin/nlp-diag.sh
 ```
 
 **Analysis fails with "No extraction runs found"**
 
 ```bash
 ls -la output/       # Verify runs exist
-bin/nlp-extract      # Run extraction first
+bin/nlp-extract.sh      # Run extraction first
 ```
 
 **Stratified sampling produces empty files**

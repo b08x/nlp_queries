@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
-# bin/nlp-extract — Interactive NLP strategy extraction
+# bin/nlp-extract.sh — Interactive NLP strategy extraction
 #
 # Usage:
-#   bin/nlp-extract                    # prompts for source directory
-#   bin/nlp-extract ~/repo1 ~/repo2    # multi-source batch extraction
+#   bin/nlp-extract.sh                    # prompts for source directory
+#   bin/nlp-extract.sh ~/repo1 ~/repo2    # multi-source batch extraction
 
 set -euo pipefail
 IFS=$'\n\t'

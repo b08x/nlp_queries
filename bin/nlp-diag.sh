@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
-# bin/nlp-diag — Diagnostic utility for extraction run structure analysis
+# bin/nlp-diag.sh — Diagnostic utility for extraction run structure analysis
 #
 # Usage:
-#   bin/nlp-diag
+#   bin/nlp-diag.sh
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -110,7 +110,7 @@ main() {
     printf '    - Ensure source directories contain searchable content\n'
   else
     printf '  ✓ Latest run appears valid with %d files\n' "${latest_files}"
-    printf '    - Ready for analysis with bin/nlp-analyze\n'
+    printf '    - Ready for analysis with bin/nlp-analyze.sh\n'
   fi
 
   printf '\n'

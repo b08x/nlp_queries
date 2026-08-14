@@ -1,0 +1,5 @@
+.ck/
+.ckignore
+logs/
+.codemap/
+.git/

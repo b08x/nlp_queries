@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
-# bin/nlp-analyze — Multi-stage NLP strategy analysis pipeline
+# bin/nlp-analyze.sh — Multi-stage NLP strategy analysis pipeline
 #
 # Processes the most recent extraction run through 5 stages:
 #   1. Discovery   — locate latest run_* directory
@@ -10,7 +10,7 @@
 #   5. Strategy    — compile synthesis and recommendations
 #
 # Usage:
-#   bin/nlp-analyze
+#   bin/nlp-analyze.sh
 
 set -euo pipefail
 IFS=$'\n\t'

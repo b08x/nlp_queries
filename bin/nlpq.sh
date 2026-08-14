@@ -3,9 +3,9 @@
 # bin/nlpq.sh — Primary entrypoint: full NLP extraction + analysis pipeline
 #
 # Stages (in order):
-#   1. Extract  — pattern discovery via nlp-extract
-#   2. Diagnose — validate extraction run via nlp-diag
-#   3. Analyze  — 5-stage analysis pipeline via nlp-analyze
+#   1. Extract  — pattern discovery via nlp-extract.sh
+#   2. Diagnose — validate extraction run via nlp-diag.sh
+#   3. Analyze  — 5-stage analysis pipeline via nlp-analyze.sh
 #
 # Usage:
 #   bin/nlpq.sh                        # interactive mode selection
@@ -42,17 +42,17 @@ Gum::install_traps
 
 _run_extract() {
   Log::stage "Stage 1 of 3: Extraction"
-  "${SCRIPT_DIR}/nlp-extract" "$@"
+  "${SCRIPT_DIR}/nlp-extract.sh" "$@"
 }
 
 _run_diag() {
   Log::stage "Stage 2 of 3: Diagnostics"
-  "${SCRIPT_DIR}/nlp-diag"
+  "${SCRIPT_DIR}/nlp-diag.sh"
 }
 
 _run_analyze() {
   Log::stage "Stage 3 of 3: Analysis"
-  "${SCRIPT_DIR}/nlp-analyze"
+  "${SCRIPT_DIR}/nlp-analyze.sh"
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────
